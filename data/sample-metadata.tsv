@@ -1,125 +1,124 @@
-Sample ID	Tank ID	Species	Population	Type	Type code	Tube Code	Tube Colour	Collection time	Collection date	Tank start date	Snail crushed date	DNA extraction date	DNA extraction batch
-A	1	Ba	Ba	Hemolymph	H	A1 Ba H	pink	morning	2019-06-26	2019-05-02	NA	2019-07-09	5
-A	1	Ba	Ba	Hepatopancreas	L	A1 Ba L	pink	morning	2019-06-26	2019-05-02	NA	2019-07-09	5
-A	1	Ba	Ba	Ovotestis	O	A1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-09	5
-A	1	Ba	Ba	Stomach	S	A1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-09	5
-A	1	Ba	Ba	Gut	G	A1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-09	5
-B	1	Ba	Ba	Hemolymph	H	B1 Ba H	pink	morning	2019-06-26	2019-05-02	NA	2019-07-10	6
-B	1	Ba	Ba	Hepatopancreas	L	B1 Ba L	pink	morning	2019-06-26	2019-05-02	NA	2019-07-10	6
-B	1	Ba	Ba	Ovotestis	O	B1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-10	6
-B	1	Ba	Ba	Stomach	S	B1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-10	6
-B	1	Ba	Ba	Gut	G	B1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-10	6
-C	1	Ba	Ba	Hemolymph	H	C1 Ba H	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
-C	1	Ba	Ba	Hepatopancreas	L	C1 Ba L	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
-C	1	Ba	Ba	Ovotestis	O	C1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
-C	1	Ba	Ba	Stomach	S	C1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
-C	1	Ba	Ba	Gut	G	C1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
-D	1	Ba	Ba	Hemolymph	H	D1 Ba H	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
-D	1	Ba	Ba	Hepatopancreas	L	D1 Ba L	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
-D	1	Ba	Ba	Ovotestis	O	D1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
-D	1	Ba	Ba	Stomach	S	D1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
-D	1	Ba	Ba	Gut	G	D1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
-E	1	Ba	Ba	Hemolymph	H	E1 Ba H	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
-E	1	Ba	Ba	Hepatopancreas	L	E1 Ba L	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
-E	1	Ba	Ba	Ovotestis	O	E1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
-E	1	Ba	Ba	Stomach	S	E1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
-E	1	Ba	Ba	Gut	G	E1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
-F	1	Ba	Ba	Whole snail 	W	F1 Ba W	pink	morning	2019-06-26	2019-05-02	2019-07-08	2019-07-11	7
-G	1	Ba	Ba	Whole snail 	W	G1 Ba W	pink	morning	2019-06-26	2019-05-02	2019-07-08	2019-07-10	6
-H	1a	Water	Water	Tank	TK	H1a H2O Ba TK	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
-H	1b	Water	Water	Tank	TK	H1b H2O Ba TK	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
-H	1a	Water	Water	Tray	TY	H1a H2O Ba TY	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
-H	1b	Water	Water	Tray	TY	H1b H2O Ba TY	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
-A	2	Ba	Ba	Hemolymph	H	A2 Ba H	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
-A	2	Ba	Ba	Hepatopancreas	L	A2 Ba L	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
-A	2	Ba	Ba	Ovotestis	O	A2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
-A	2	Ba	Ba	Stomach	S	A2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
-A	2	Ba	Ba	Gut	G	A2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
-B	2	Ba	Ba	Hemolymph	H	B2 Ba H	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
-B	2	Ba	Ba	Hepatopancreas	L	B2 Ba L	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
-B	2	Ba	Ba	Ovotestis	O	B2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
-B	2	Ba	Ba	Stomach	S	B2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
-B	2	Ba	Ba	Gut	G	B2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
-C	2	Ba	Ba	Hemolymph	H	C2 Ba H	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
-C	2	Ba	Ba	Hepatopancreas	L	C2 Ba L	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
-C	2	Ba	Ba	Ovotestis	O	C2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
-C	2	Ba	Ba	Stomach	S	C2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
-C	2	Ba	Ba	Gut	G	C2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
-D	2	Ba	Ba	Hemolymph	H	D2 Ba H	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-11	7
-D	2	Ba	Ba	Hepatopancreas	L	D2 Ba L	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-11	7
-D	2	Ba	Ba	Ovotestis	O	D2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-11	7
-D	2	Ba	Ba	Stomach	S	D2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-11	7
-D	2	Ba	Ba	Gut	G	D2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-11	7
-E	2	Ba	Ba	Hemolymph	H	E2 Ba H	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
-E	2	Ba	Ba	Hepatopancreas	L	E2 Ba L	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
-E	2	Ba	Ba	Ovotestis	O	E2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
-E	2	Ba	Ba	Stomach	S	E2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
-E	2	Ba	Ba	Gut	G	E2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
-F	2	Ba	Ba	Whole snail 	W	F2 Ba W	white	afternoon	2019-06-27	2019-05-24	2019-07-10	2019-07-11	7
-G	2	Ba	Ba	Whole snail 	W	G2 Ba W	white	afternoon	2019-06-27	2019-05-24	2019-07-10	2019-07-11	7
-H	2a	Water	Water	Tank	TK	H2a H2O Ba TK	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
-H	2b	Water	Water	Tank	TK	H2b H2O Ba TK	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
-H	2a	Water	Water	Tray	TY	H2a H2O Ba TY	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
-H	2b	Water	Water	Tray	TY	H2b H2O Ba TY	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
-A	3	Bg	BgBS90	Hemolymph	H	A3 Bg90 H	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
-A	3	Bg	BgBS90	Hepatopancreas	L	A3 Bg90 L	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
-A	3	Bg	BgBS90	Ovotestis	O	A3 Bg90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
-A	3	Bg	BgBS90	Stomach	S	A3 Bg90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
-A	3	Bg	BgBS90	Gut	G	A3 Bg90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
-B	3	Bg	BgBS90	Hemolymph	H	B3 Bg90 H	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-10	6
-B	3	Bg	BgBS90	Hepatopancreas	L	B3 Bg90 L	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-10	6
-B	3	Bg	BgBS90	Ovotestis	O	B3 Bg90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-10	6
-B	3	Bg	BgBS90	Stomach	S	B3 Bg90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-10	6
-B	3	Bg	BgBS90	Gut	G	B3 Bg90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-10	6
-C	3	Bg	BgBS90	Hemolymph	H	C3 Bg90 H	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
-C	3	Bg	BgBS90	Hepatopancreas	L	C3 Bg90 L	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
-C	3	Bg	BgBS90	Ovotestis	O	C3 Bg90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
-C	3	Bg	BgBS90	Stomach	S	C3 Bg90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
-C	3	Bg	BgBS90	Gut	G	C3 Bg90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
-D	3	Bg	BgBS90	Hemolymph	H	D3 Bg90 H	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	2
-D	3	Bg	BgBS90	Hepatopancreas	L	D3 Bg90 L	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	2
-D	3	Bg	BgBS90	Ovotestis	O	D3 Bg90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	2
-D	3	Bg	BgBS90	Stomach	S	D3 Bg90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	2
-D	3	Bg	BgBS90	Gut	G	D3 Bg90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	2
-E	3	Bg	BgBS90	Hemolymph	H	E3 Bg90 H	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
-E	3	Bg	BgBS90	Hepatopancreas	L	E3 Bg90 L	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
-E	3	Bg	BgBS90	Ovotestis	O	E3 Bg90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
-E	3	Bg	BgBS90	Stomach	S	E3 Bg90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
-E	3	Bg	BgBS90	Gut	G	E3 Bg90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
-F	3	Bg	BgBS90	Whole snail 	W	F3 Bg90 W	yellow	morning	2019-06-27	2019-05-13	2019-07-09	2019-07-10	6
-G	3	Bg	BgBS90	Whole snail 	W	G3 Bg90 W	yellow	morning	2019-06-27	2019-05-13	2019-07-09	2019-07-11	7
-H	3a	Water	Water	Tank	TK	H3a H2O Bg90 TK	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
-H	3b	Water	Water	Tank	TK	H3b H2O Bg90 TK	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
-H	3a	Water	Water	Tray	TY	H3a H2O Bg90 TY	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
-H	3b	Water	Water	Tray	TY	H3b H2O Bg90 TY	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
-A	4	Bg	BgBS90	Hemolymph	H	A4 Bg90 H	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
-A	4	Bg	BgBS90	Hepatopancreas	L	A4 Bg90 L	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
-A	4	Bg	BgBS90	Ovotestis	O	A4 Bg90 O	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
-A	4	Bg	BgBS90	Stomach	S	A4 Bg90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
-A	4	Bg	BgBS90	Gut	G	A4 Bg90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
-B	4	Bg	BgBS90	Hemolymph	H	B4 Bg90 H	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
-B	4	Bg	BgBS90	Hepatopancreas	L	B4 Bg90 L	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
-B	4	Bg	BgBS90	Ovotestis	O	B4 Bg90 O	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
-B	4	Bg	BgBS90	Stomach	S	B2 Bg90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
-B	4	Bg	BgBS90	Gut	G	B4 Bg90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
-C	4	Bg	BgBS90	Hemolymph	H	C4 Bg90 H	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	2
-C	4	Bg	BgBS90	Hepatopancreas	L	C4 Bg90 L	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	2
-C	4	Bg	BgBS90	Ovotestis	O	C4 Bg90 O	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	2
-C	4	Bg	BgBS90	Stomach	S	C4 Bg90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	2
-C	4	Bg	BgBS90	Gut	G	C4 Bg90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	2
-D	4	Bg	BgBS90	Hemolymph	H	D4 Bg90 H	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-09	5
-D	4	Bg	BgBS90	Hepatopancreas	L	D4 Bg90 L	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-09	5
-D	4	Bg	BgBS90	Ovotestis	O	D4 Bg90 O	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-09	5
-D	4	Bg	BgBS90	Stomach	S	D4 Bg90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-09	5
-D	4	Bg	BgBS90	Gut	G	D4 Bg90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-09	5
-E	4	Bg	BgBS90	Hemolymph	H	E4 Bg90 H	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
-E	4	Bg	BgBS90	Hepatopancreas	L	E4 Bg90 L	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
-E	4	Bg	BgBS90	Ovotestis	O	E4 Bg90 O	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
-E	4	Bg	BgBS90	Stomach	S	E4 Bg90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
-E	4	Bg	BgBS90	Gut	G	E4 Bg90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
-F	4	Bg	BgBS90	Whole snail 	W	F4 Bg90 W	orange	afternoon	2019-06-26	2018-07-01	2019-07-08	2019-07-11	7
-G	4	Bg	BgBS90	Whole snail 	W	G4 Bg90 W	orange	afternoon	2019-06-26	2018-07-01	2019-07-09	2019-07-11	7
-H	4a	Water	Water	Tank	TK	H4a H2O Bg90 TK	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
-H	4b	Water	Water	Tank	TK	H4b H2O Bg90 TK	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
-H	4a	Water	Water	Tray	TY	H4a H2O Bg90 TY	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
-H	4b	Water	Water	Tray	TY	H4b H2O Bg90 TY	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
+Sample ID	Snail ID	Tank ID	Species	Population	Type	Type code	Tube Code	Tube Color	Collection time	Collection date	Tank start date	Snail crushed date	DNA extraction date	DNA extraction batch
+A.1.Ba.H	A	1	Ba	Ba	Hemolymph	H	A1 Ba H	pink	morning	2019-06-26	2019-05-02	NA	2019-07-09	5
+A.1.Ba.L	A	1	Ba	Ba	Hepatopancreas	L	A1 Ba L	pink	morning	2019-06-26	2019-05-02	NA	2019-07-09	5
+A.1.Ba.O	A	1	Ba	Ba	Ovotestis	O	A1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-09	5
+A.1.Ba.S	A	1	Ba	Ba	Stomach	S	A1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-09	5
+A.1.Ba.G	A	1	Ba	Ba	Gut	G	A1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-09	5
+B.1.Ba.H	B	1	Ba	Ba	Hemolymph	H	B1 Ba H	pink	morning	2019-06-26	2019-05-02	NA	2019-07-10	6
+B.1.Ba.L	B	1	Ba	Ba	Hepatopancreas	L	B1 Ba L	pink	morning	2019-06-26	2019-05-02	NA	2019-07-10	6
+B.1.Ba.O	B	1	Ba	Ba	Ovotestis	O	B1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-10	6
+B.1.Ba.S	B	1	Ba	Ba	Stomach	S	B1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-10	6
+B.1.Ba.G	B	1	Ba	Ba	Gut	G	B1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-10	6
+C.1.Ba.H	C	1	Ba	Ba	Hemolymph	H	C1 Ba H	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
+C.1.Ba.L	C	1	Ba	Ba	Hepatopancreas	L	C1 Ba L	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
+C.1.Ba.O	C	1	Ba	Ba	Ovotestis	O	C1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
+C.1.Ba.S	C	1	Ba	Ba	Stomach	S	C1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
+C.1.Ba.G	C	1	Ba	Ba	Gut	G	C1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
+D.1.Ba.H	D	1	Ba	Ba	Hemolymph	H	D1 Ba H	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
+D.1.Ba.L	D	1	Ba	Ba	Hepatopancreas	L	D1 Ba L	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
+D.1.Ba.O	D	1	Ba	Ba	Ovotestis	O	D1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
+D.1.Ba.S	D	1	Ba	Ba	Stomach	S	D1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
+D.1.Ba.G	D	1	Ba	Ba	Gut	G	D1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
+E.1.Ba.H	E	1	Ba	Ba	Hemolymph	H	E1 Ba H	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
+E.1.Ba.L	E	1	Ba	Ba	Hepatopancreas	L	E1 Ba L	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
+E.1.Ba.O	E	1	Ba	Ba	Ovotestis	O	E1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
+E.1.Ba.S	E	1	Ba	Ba	Stomach	S	E1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
+E.1.Ba.G	E	1	Ba	Ba	Gut	G	E1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
+F.1.Ba.W	F	1	Ba	Ba	Whole snail 	W	F1 Ba W	pink	morning	2019-06-26	2019-05-02	2019-07-08	2019-07-11	7
+G.1.Ba.W	G	1	Ba	Ba	Whole snail 	W	G1 Ba W	pink	morning	2019-06-26	2019-05-02	2019-07-08	2019-07-10	6
+H.1.Ba.TK.a	H	1	Water	Ba	Tank	TK	H1a H2O Ba TK	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
+H.1.Ba.TK.b	H	1	Water	Ba	Tank	TK	H1b H2O Ba TK	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
+H.1.Ba.TY.a	H	1	Water	Ba	Tray	TY	H1a H2O Ba TY	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
+H.1.Ba.TY.b	H	1	Water	Ba	Tray	TY	H1b H2O Ba TY	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
+A.2.Ba.H	A	2	Ba	Ba	Hemolymph	H	A2 Ba H	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
+A.2.Ba.L	A	2	Ba	Ba	Hepatopancreas	L	A2 Ba L	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
+A.2.Ba.O	A	2	Ba	Ba	Ovotestis	O	A2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
+A.2.Ba.S	A	2	Ba	Ba	Stomach	S	A2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
+A.2.Ba.G	A	2	Ba	Ba	Gut	G	A2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
+B.2.Ba.H	B	2	Ba	Ba	Hemolymph	H	B2 Ba H	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
+B.2.Ba.L	B	2	Ba	Ba	Hepatopancreas	L	B2 Ba L	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
+B.2.Ba.O	B	2	Ba	Ba	Ovotestis	O	B2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
+B.2.Ba.S	B	2	Ba	Ba	Stomach	S	B2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
+B.2.Ba.G	B	2	Ba	Ba	Gut	G	B2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
+C.2.Ba.H	C	2	Ba	Ba	Hemolymph	H	C2 Ba H	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
+C.2.Ba.L	C	2	Ba	Ba	Hepatopancreas	L	C2 Ba L	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
+C.2.Ba.O	C	2	Ba	Ba	Ovotestis	O	C2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
+C.2.Ba.S	C	2	Ba	Ba	Stomach	S	C2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
+C.2.Ba.G	C	2	Ba	Ba	Gut	G	C2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
+D.2.Ba.H	D	2	Ba	Ba	Hemolymph	H	D2 Ba H	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-11	7
+D.2.Ba.L	D	2	Ba	Ba	Hepatopancreas	L	D2 Ba L	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-11	7
+D.2.Ba.O	D	2	Ba	Ba	Ovotestis	O	D2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-11	7
+D.2.Ba.S	D	2	Ba	Ba	Stomach	S	D2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-11	7
+D.2.Ba.G	D	2	Ba	Ba	Gut	G	D2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-11	7
+E.2.Ba.H	E	2	Ba	Ba	Hemolymph	H	E2 Ba H	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
+E.2.Ba.L	E	2	Ba	Ba	Hepatopancreas	L	E2 Ba L	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
+E.2.Ba.O	E	2	Ba	Ba	Ovotestis	O	E2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
+E.2.Ba.S	E	2	Ba	Ba	Stomach	S	E2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
+E.2.Ba.G	E	2	Ba	Ba	Gut	G	E2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
+F.2.Ba.W	F	2	Ba	Ba	Whole snail 	W	F2 Ba W	white	afternoon	2019-06-27	2019-05-24	2019-07-10	2019-07-11	7
+G.2.Ba.W	G	2	Ba	Ba	Whole snail 	W	G2 Ba W	white	afternoon	2019-06-27	2019-05-24	2019-07-10	2019-07-11	7
+H.2.Ba.TK.a	H	2	Water	Ba	Tank	TK	H2a H2O Ba TK	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
+H.2.Ba.TK.b	H	2	Water	Ba	Tank	TK	H2b H2O Ba TK	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
+H.2.Ba.TY.a	H	2	Water	Ba	Tray	TY	H2a H2O Ba TY	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
+H.2.Ba.TY.b	H	2	Water	Ba	Tray	TY	H2b H2O Ba TY	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-10	6
+A.3.BgBS90.H	A	3	Bg	BgBS90	Hemolymph	H	A3 BgBS90 H	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
+A.3.BgBS90.L	A	3	Bg	BgBS90	Hepatopancreas	L	A3 BgBS90 L	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
+A.3.BgBS90.O	A	3	Bg	BgBS90	Ovotestis	O	A3 BgBS90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
+A.3.BgBS90.S	A	3	Bg	BgBS90	Stomach	S	A3 BgBS90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
+A.3.BgBS90.G	A	3	Bg	BgBS90	Gut	G	A3 BgBS90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
+B.3.BgBS90.H	B	3	Bg	BgBS90	Hemolymph	H	B3 BgBS90 H	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-10	6
+B.3.BgBS90.L	B	3	Bg	BgBS90	Hepatopancreas	L	B3 BgBS90 L	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-10	6
+B.3.BgBS90.O	B	3	Bg	BgBS90	Ovotestis	O	B3 BgBS90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-10	6
+B.3.BgBS90.S	B	3	Bg	BgBS90	Stomach	S	B3 BgBS90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-10	6
+B.3.BgBS90.G	B	3	Bg	BgBS90	Gut	G	B3 BgBS90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-10	6
+C.3.BgBS90.H	C	3	Bg	BgBS90	Hemolymph	H	C3 BgBS90 H	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
+C.3.BgBS90.L	C	3	Bg	BgBS90	Hepatopancreas	L	C3 BgBS90 L	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
+C.3.BgBS90.O	C	3	Bg	BgBS90	Ovotestis	O	C3 BgBS90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
+C.3.BgBS90.S	C	3	Bg	BgBS90	Stomach	S	C3 BgBS90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
+C.3.BgBS90.G	C	3	Bg	BgBS90	Gut	G	C3 BgBS90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
+D.3.BgBS90.H	D	3	Bg	BgBS90	Hemolymph	H	D3 BgBS90 H	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	2
+D.3.BgBS90.L	D	3	Bg	BgBS90	Hepatopancreas	L	D3 BgBS90 L	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	2
+D.3.BgBS90.O	D	3	Bg	BgBS90	Ovotestis	O	D3 BgBS90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	2
+D.3.BgBS90.S	D	3	Bg	BgBS90	Stomach	S	D3 BgBS90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	2
+D.3.BgBS90.G	D	3	Bg	BgBS90	Gut	G	D3 BgBS90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	2
+E.3.BgBS90.H	E	3	Bg	BgBS90	Hemolymph	H	E3 BgBS90 H	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
+E.3.BgBS90.L	E	3	Bg	BgBS90	Hepatopancreas	L	E3 BgBS90 L	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
+E.3.BgBS90.O	E	3	Bg	BgBS90	Ovotestis	O	E3 BgBS90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
+E.3.BgBS90.S	E	3	Bg	BgBS90	Stomach	S	E3 BgBS90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
+E.3.BgBS90.G	E	3	Bg	BgBS90	Gut	G	E3 BgBS90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
+F.3.BgBS90.W	F	3	Bg	BgBS90	Whole snail 	W	F3 BgBS90 W	yellow	morning	2019-06-27	2019-05-13	2019-07-09	2019-07-10	6
+G.3.BgBS90.W	G	3	Bg	BgBS90	Whole snail 	W	G3 BgBS90 W	yellow	morning	2019-06-27	2019-05-13	2019-07-09	2019-07-11	7
+H.3.BgBS90.TK.a	H	3	Water	BgBS90	Tank	TK	H3a H2O BgBS90 TK	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
+H.3.BgBS90.TK.b	H	3	Water	BgBS90	Tank	TK	H3b H2O BgBS90 TK	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
+H.3.BgBS90.TY.a	H	3	Water	BgBS90	Tray	TY	H3a H2O BgBS90 TY	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
+H.3.BgBS90.TY.b	H	3	Water	BgBS90	Tray	TY	H3b H2O BgBS90 TY	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
+A.4.BgBS90.H	A	4	Bg	BgBS90	Hemolymph	H	A4 BgBS90 H	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
+A.4.BgBS90.L	A	4	Bg	BgBS90	Hepatopancreas	L	A4 BgBS90 L	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
+A.4.BgBS90.O	A	4	Bg	BgBS90	Ovotestis	O	A4 BgBS90 O	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
+A.4.BgBS90.S	A	4	Bg	BgBS90	Stomach	S	A4 BgBS90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
+A.4.BgBS90.G	A	4	Bg	BgBS90	Gut	G	A4 BgBS90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
+B.4.BgBS90.H	B	4	Bg	BgBS90	Hemolymph	H	B4 BgBS90 H	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
+B.4.BgBS90.L	B	4	Bg	BgBS90	Hepatopancreas	L	B4 BgBS90 L	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
+B.4.BgBS90.O	B	4	Bg	BgBS90	Ovotestis	O	B4 BgBS90 O	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
+B.4.BgBS90.S	B	4	Bg	BgBS90	Stomach	S	B2 BgBS90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
+B.4.BgBS90.G	B	4	Bg	BgBS90	Gut	G	B4 BgBS90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
+C.4.BgBS90.H	C	4	Bg	BgBS90	Hemolymph	H	C4 BgBS90 H	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	2
+C.4.BgBS90.L	C	4	Bg	BgBS90	Hepatopancreas	L	C4 BgBS90 L	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	2
+C.4.BgBS90.S	C	4	Bg	BgBS90	Stomach	S	C4 BgBS90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	2
+C.4.BgBS90.G	C	4	Bg	BgBS90	Gut	G	C4 BgBS90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	2
+D.4.BgBS90.H	D	4	Bg	BgBS90	Hemolymph	H	D4 BgBS90 H	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-09	5
+D.4.BgBS90.L	D	4	Bg	BgBS90	Hepatopancreas	L	D4 BgBS90 L	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-09	5
+D.4.BgBS90.O	D	4	Bg	BgBS90	Ovotestis	O	D4 BgBS90 O	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-09	5
+D.4.BgBS90.S	D	4	Bg	BgBS90	Stomach	S	D4 BgBS90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-09	5
+D.4.BgBS90.G	D	4	Bg	BgBS90	Gut	G	D4 BgBS90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-09	5
+E.4.BgBS90.H	E	4	Bg	BgBS90	Hemolymph	H	E4 BgBS90 H	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
+E.4.BgBS90.L	E	4	Bg	BgBS90	Hepatopancreas	L	E4 BgBS90 L	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
+E.4.BgBS90.O	E	4	Bg	BgBS90	Ovotestis	O	E4 BgBS90 O	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
+E.4.BgBS90.S	E	4	Bg	BgBS90	Stomach	S	E4 BgBS90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
+E.4.BgBS90.G	E	4	Bg	BgBS90	Gut	G	E4 BgBS90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
+F.4.BgBS90.W	F	4	Bg	BgBS90	Whole snail 	W	F4 BgBS90 W	orange	afternoon	2019-06-26	2018-07-01	2019-07-08	2019-07-11	7
+G.4.BgBS90.W	G	4	Bg	BgBS90	Whole snail 	W	G4 BgBS90 W	orange	afternoon	2019-06-26	2018-07-01	2019-07-09	2019-07-11	7
+H.4.BgBS90.TK.a	H	4	Water	BgBS90	Tank	TK	H4a H2O BgBS90 TK	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
+H.4.BgBS90.TK.b	H	4	Water	BgBS90	Tank	TK	H4b H2O BgBS90 TK	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
+H.4.BgBS90.TY.a	H	4	Water	BgBS90	Tray	TY	H4a H2O BgBS90 TY	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
+H.4.BgBS90.TY.b	H	4	Water	BgBS90	Tray	TY	H4b H2O BgBS90 TY	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
