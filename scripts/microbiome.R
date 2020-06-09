@@ -1,83 +1,93 @@
+#!/usr/bin/env Rscript
+# Title: microbiome_diversity.R
+# !! Version: 1.0  !!
+# Author: Frédéric CHEVALIER <fcheval@txbiomed.org>
+# !! Created in: 2020-03-25 !!
+
+
+
 #==========#
 # Packages #
 #==========#
 
-# System
-library(magrittr)
-#library(rio)
-library(doParallel)
-library("plyr")             # function count
-#library(rcompanion)
-#library(multcompView)
+cat("Loading packages...\n")
 
-library("tidyr")
+suppressMessages({
+    # System
+#    library("magrittr")
+    library("plyr")             # function count
+    library("tidyr")
 
-library("microbiome")
-library("qiime2R")
-library("phyloseq")
-library("picante")          # PD function
-library("pairwiseAdonis")   # see github
-library("taxa")             # devtools::install_github("ropensci/taxa")
-library("metacoder")
-library("phylogram")        # prune function
+    # Microbiome
+    library("microbiome")       # function core
+    library("qiime2R")
+    library("phyloseq")
+    library("picante")          # PD function
+    library("pairwiseAdonis")   # see github
+    library("phylogram")        # prune function
+    library("pvclust")
+    library("dendextend")        # pvclust_edges function
 
-# Graph
-library(RColorBrewer)
-library(colorspace)
-library(grid)
-library(gridBase)
-library("plotrix")
-library("ggpubr")
-#library("igraph")   # For tree
+    # Graph
+    library("colorspace")       # function rainbow_hcl
+    library("cowplot")
+    library("ggpubr")
+    library("ggdendro")
+    library("grid")             # function grid.rect
+})
 
-library("ggdendro")
+
 
 #===========#
 # Functions #
 #===========#
 
-source("microbiome_func.R")
+# Working directory
+#setwd(file.path(getwd(), "scripts"))
+
+cat("Loading functions...\n")
+source("microbiome_diversity_func.R")
+
 
 
 #===========#
 # Variables #
 #===========#
 
-asv.f  <- "results/1-qiime/table.qza"
-taxa.f <- "results/1-qiime/rep-seqs_taxa.qza"
-tree.f <- "results/1-qiime/rooted-tree.qza"
+cat("Setting variables...\n")
 
-md.f   <- "sample-metadata.tsv"
+asv.f  <- "../results/1-qiime/table.qza"
+taxa.f <- "../results/1-qiime/rep-seqs_taxa.qza"
+tree.f <- "../results/1-qiime/rooted-tree.qza"
 
-# Population order
-#pop.ordr <- c("Ba", "BgBS90")
-pop.ordr <- c("Ba", "Bg90")
+md.f   <- "../data/sample-metadata.tsv"
 
-# Color vector
-pop.clr <- c("#ff8f00", "#db224a", "#db22be", "#8622db", "#3eb379", "#2bb32b", "#713633", "#0008ff")
+# Population order and color
+pop.data <- matrix(c("Ba",   "#ffac40",
+                     "Bg90", "#87d687"), byrow=TRUE, ncol=2) # Change to BgBS90
 
-ts.ordr <- matrix(c(
-		"G", "Gut",
+# Tissue order
+ts.data <- matrix(c(
 		"H", "Hemolymph",
+		"S", "Stomach",
+		"G", "Gut",
 		"L", "Hepatopancreas",
 		"O", "Ovotestis",
-		"S", "Stomach",
-		"TK", "Water tank",
+        "W", "Whole snail",
 		"TY", "Water tray",
-		"W", "Whole snails"), ncol=2, byrow=TRUE)
+		"TK", "Water tank"), ncol=2, byrow=TRUE)
 
 
-graph.d <- "graphs/"
+# Graph output directory
+graph.d <- "../graphs/"
+
 # GGplot options
 theme_set(theme_classic())
 
-# This is needed otherwise there is a strsplit error
-## source: https://stackoverflow.com/a/46392502
-Sys.setlocale('LC_ALL','C')
-
-#set.seed(123456)
+# Seed for reproducibility
 myseed <- 26017
 set.seed(myseed)
+
 
 
 #=================#
@@ -119,8 +129,13 @@ taxa_names(taxa.tb) <- rownames(taxa)
 # Loading tree
 tree <- read_qza(tree.f)$data
 
-# Loading metadata
+# Loading metadata and reorder factors
 md <- read.delim(md.f, row.names=1)
+# vvvv To be removed when md file updated
+colnames(md)[,1] <- "Population"
+# ^^^^
+md[,"Population"] <- factor(md[,"Population"], pop.data[,1])
+md[,"Tissue"] <- factor(md[,"Tissue"], ts.data[,1])
 
 # Building phyloseq object
 mybiom <- phyloseq(asv.tb, taxa.tb, tree, sample_data(md))
@@ -139,11 +154,6 @@ mypop <- md
 
 
 
-## Register backend cluster for parallel work with some commands
-#cl <- makeCluster(detectCores(all.tests=TRUE))
-#registerDoParallel(cl)
-
-
 #mybiom.rep <- mybiom
 rep    <- unclass(sample_data(mybiom)[,"Replicate"])[[1]]
 nb.rep <- unique(rep)
@@ -155,10 +165,16 @@ min.seq <- rep(NA, length(nb.rep))
 #mybiom <- subset_samples(mybiom, myrows)
 
 
-#-------------------#
-# Rarefaction curve #
-#-------------------#
+#--------------------#
+# Rarefaction curves #
+#--------------------#
+ 
+p <- ggrare(mybiom, step = 1000, color = "Population", se = FALSE, plot=FALSE) +
+        scale_color_manual(values = pop.data[,2]) +
+        theme(legend.position="none") +
+        facet_wrap(~Population)
 
+ggsave(paste0(graph.d,"Fig. 2 - rarefaction.pdf"), p, height=7, width=7, useDingbats=FALSE)
 #p <- ggrare(mybiom, step = 1000, color = "Population", label = "Sample", se = FALSE, plot=FALSE)
 p <- ggrare(mybiom, step = 1000, color = "Species", se = FALSE, plot=FALSE)
 p <- p + facet_wrap(~Tissue)
