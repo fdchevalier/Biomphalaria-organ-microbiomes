@@ -1,5 +1,5 @@
-data/*
+data/
 !data/sample-metadata.tsv
-database/*
-results/*
-.ipynb_checkpoints/*
+database/
+results/
+.ipynb_checkpoints/
