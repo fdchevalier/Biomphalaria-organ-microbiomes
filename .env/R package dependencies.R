@@ -14,6 +14,9 @@ install_version("phylogram",  version="2.1.0",  upgrade="never")      # prune fu
 install_github("jbisanz/qiime2R", ref="574708a", upgrade="never")
 
 
+# PCA analysis
+install_github("willtownes/glmpca", ref="edc04cc", upgrade="never")
+
 ##install_version("doParallel", version="1.0.15", upgrade="never")
 
 ##library(rcompanion)
