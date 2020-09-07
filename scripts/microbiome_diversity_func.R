@@ -1,16 +1,21 @@
+# Title: microbiome_diversity_function.R
+# Version: 1.1
+# Author: Frédéric CHEVALIER <fcheval@txbiomed.org>
+# Created in: 2020-03-25
+# Modified in: 2020-08-31
+
+
+
+#=======================#
+# Computation functions #
+#=======================#
+
+# Standard error
 se <- function(x) { sd(x) / sqrt(length(x)) }
 
-tsv2csv <- function(x) {
-    require(magrittr)
-    require(rio)
-    
-    myfn <- basename(x) %>% tools::file_path_sans_ext()
-    out.path <- paste0(tempdir(),"/",myfn,".csv")
-    convert(x, out.path, in_opts = list(format = "tsv"))
-    return(out.path)
-}
 
-
+# Edited tax_glom function from phyloseq
+## This removed NA columns from the taxa table
 mytax_glom <- function(x, taxrank=NULL, ...) {
     if (is.null(taxrank)) { stop("taxrank required") }
     if (! any(grepl(taxrank, rank_names(x))) ) { stop("taxrank unknown") }
@@ -22,13 +27,14 @@ mytax_glom <- function(x, taxrank=NULL, ...) {
     return(x)
 }
 
+
+# Agglomerate taxa from the same sample category
 mysample_glom <- function(x, cln) {
 
     myls <- split(get_variable(x), get_variable(x)[,cln])
 
     myotu <- myls %>% lapply(., rownames) %>% sapply(., function(y) rowSums(otu_table(x)[,y]))
 
-#    otu_table(x) <- otu_table(myotu, taxa_are_rows=TRUE)
     myspl <- myls %>% lapply(., function(y) y[1,]) %>% unsplit(., levels(get_variable(x)[,cln]))
     rownames(myspl) <- myspl[,cln]
 
@@ -37,61 +43,8 @@ mysample_glom <- function(x, cln) {
     return(x)
 }
 
-calculate_rarefaction_curves <- function(psdata, measures, depths, parallel=FALSE) {
-    require('plyr') # ldply
-    require('reshape2') # melt
-    require('doParallel')
 
-    # Set parallel options if required
-    if (parallel) {
-        paropts  <- list(.packages=c("phyloseq", "reshape2"))
-    } else {
-        paropts  <- NULL
-    }
-    
-    estimate_rarified_richness <- function(psdata, measures, depth) {
-        if(max(sample_sums(psdata)) < depth) return()
-        psdata <- prune_samples(sample_sums(psdata) >= depth, psdata)
-
-        rarified_psdata <- rarefy_even_depth(psdata, depth, verbose = FALSE)
-
-        alpha_diversity <- estimate_richness(rarified_psdata, measures = measures)
-
-        # as.matrix forces the use of melt.array, which includes the Sample names (rownames)
-        molten_alpha_diversity <- melt(as.matrix(alpha_diversity), varnames = c('Sample', 'Measure'), value.name = 'Alpha_diversity')
-
-        molten_alpha_diversity
-    } 
-
-    names(depths) <- depths # this enables automatic addition of the Depth to the output by ldply
-    rarefaction_curve_data <- ldply(depths, estimate_rarified_richness, psdata = psdata, measures = measures, .id = 'Depth', .progress = ifelse(interactive() && ! parallel, 'text', 'none'), .parallel=parallel, .paropts=paropts)
-
-    # convert Depth from factor to numeric
-    rarefaction_curve_data$Depth <- as.numeric(levels(rarefaction_curve_data$Depth))[rarefaction_curve_data$Depth]
-
-    rarefaction_curve_data
-}
-
-
-
-#generate.label.df <- function(x, variable){
-#
-#    # x         Tukey test
-#    # variable  variable used for the Anova
-#
-#    # Dependency
-#    library(multcompView)
-#
-#     # Extract labels and factor levels from Tukey post-hoc
-#     Tukey.levels <- x[[variable]][,4]
-#     Tukey.labels <- data.frame(multcompLetters(Tukey.levels)['Letters'])
-#
-#     # Put the labels in the same order as in the boxplot
-#     Tukey.labels$treatment <- rownames(Tukey.labels)
-#     Tukey.labels           <- Tukey.labels[ order(Tukey.labels$treatment) , ]
-#     return(Tukey.labels)
-#}
-
+# Generate letter labels from post-hoc test
 generate.label.df <- function(x){
 
     # x         Tukey test
@@ -100,28 +53,27 @@ generate.label.df <- function(x){
     # Dependency
     library(multcompView)
 
-     # Extract labels and factor levels from Tukey post-hoc
-     Tukey.levels <- x
-     Tukey.labels <- data.frame(multcompLetters(Tukey.levels)['Letters'])
+    # Extract labels and factor levels from Tukey post-hoc
+    Tukey.levels <- x
+    Tukey.labels <- data.frame(multcompLetters(Tukey.levels)['Letters'])
 
-     # Put the labels in the same order as in the boxplot
-     Tukey.labels$treatment <- rownames(Tukey.labels)
-#     Tukey.labels           <- Tukey.labels[ order(Tukey.labels$treatment) , ]
-     return(Tukey.labels)
+    # Put the labels in the same order as in the boxplot
+    Tukey.labels$treatment <- rownames(Tukey.labels)
+#    Tukey.labels           <- Tukey.labels[ order(Tukey.labels$treatment) , ]
+    return(Tukey.labels)
 }
 
 
 
+#=====================#
+# Graphical functions #
+#=====================#
 
-
-
-
-
-
-
+#-------------------#
+# Rarefaction curve #
+#-------------------#
 
 ## source: https://github.com/mahendra-mariadassou/phyloseq-extended/blob/9efcd88995d9e60104592d1edcee784cf59c3381/R/graphical_methods.R
-
 ggrare <- function(physeq, step = 10, label = NULL, color = NULL, plot = TRUE, parallel = FALSE, se = TRUE) {
     ## Args:
     ## - physeq: phyloseq class object, from which abundance data are extracted
@@ -144,7 +96,7 @@ ggrare <- function(physeq, step = 10, label = NULL, color = NULL, plot = TRUE, p
     ## - plot:  Logical, should the graphic be plotted.
     ## - parallel: should rarefaction be parallelized (using parallel framework)
     ## - se:    Default TRUE. Logical. Should standard errors be computed.
-  
+
     ## Require vegan and ggplot2
     library("vegan")
     library("ggplot2")
@@ -171,7 +123,7 @@ ggrare <- function(physeq, step = 10, label = NULL, color = NULL, plot = TRUE, p
             return(data.frame(.S = y[1, ], Size = n, Sample = rownames(x)[i]))
         }
     }
-    
+
     if (parallel) {
         out <- mclapply(seq_len(nr), rarefun, mc.preschedule = FALSE)
     } else {
@@ -220,16 +172,118 @@ ggrare <- function(physeq, step = 10, label = NULL, color = NULL, plot = TRUE, p
 }
 
 
+#--------------#
+# Shift legend #
+#--------------#
+
 ## source: https://stackoverflow.com/a/58734961
-shift_legend <- function(p) {
+shift_legend <- function(p, position = "center") {
     # Dependencies
-    library("cowplot")
-    library("lemon")
-    
+    suppressMessages({
+        library("cowplot")
+        library("lemon")
+    })
+
     pnls <- cowplot::plot_to_gtable(p) %>% gtable::gtable_filter("panel") %>%
         with(setNames(grobs, layout$name)) %>% purrr::keep(~identical(.x,zeroGrob()))
 
     if( length(pnls) == 0 ) stop( "No empty facets in the plot" )
 
-    lemon::reposition_legend( p, "center", panel=names(pnls) )
+    lemon::reposition_legend( p, position, panel=names(pnls) )
 }
+
+
+#---------------------#
+# Plot p-value matrix #
+#---------------------#
+
+## source: https://github.com/b0rxa/scmamp/blob/d74d0c085f82ed4bfef45ed537f773b20d9eaf85/R/plotting.R
+plotPvalues <- function(pvalue.matrix, alg.order=NULL, show.pvalue=TRUE, font.size=NULL, border.col="white", pval.col="white", scientific = TRUE) {
+
+    # Dependencies
+    if (!requireNamespace("ggplot2", quietly=TRUE)) {
+        stop("This function requires the ggplot2 package. Please install it.", call.=FALSE)
+    }
+    suppressMessages(library("reshape2"))
+
+    # Convert the matrix into a data frame and order the algorithms according to
+    # the desired order.
+    df <- melt(pvalue.matrix)
+    colnames(df) <- c("X", "Y", "p.value")
+    if (!is.null(alg.order)) {
+        l <- colnames(pvalue.matrix)[alg.order]
+        df$X <- factor(df$X, levels=l)
+        df$Y <- factor(df$Y, levels=l)
+    }
+
+    gplot <- ggplot2::ggplot(df, ggplot2::aes(x=X, y=Y, fill=p.value)) + ggplot2::geom_tile(col=border.col) +
+    ggplot2::scale_fill_continuous("p-value") + ggplot2::labs(x="Algorithm" , y="Algorithm")
+
+    if (show.pvalue) {
+        ## geom_text size are not font size
+        ## source :https://community.rstudio.com/t/why-does-ggplot-size-parameter-not-behave-consistently/21619/4
+        if (is.null(font.size)) font.size <- GeomLabel$default_aes$size / .pt
+        p.value.f <- df$p.value
+        if (scientific) {
+            p.value.f[ ! is.na(p.value.f) ] <- format(p.value.f[ ! is.na(p.value.f) ], digits=2, scientific = TRUE, na.encode = FALSE)
+        } else {
+            p.value.f <- round(p.value.f, 2)
+        }
+        gplot <- gplot + ggplot2::geom_text(ggplot2::aes(label = p.value.f),
+                                        size=font.size, col=pval.col)
+    }
+    return(gplot)
+}
+
+
+#------------------------#
+# Distinct color palette #
+#------------------------#
+
+## source: https://github.com/ronammar/randomcoloR/blob/e8bf2c21c4e9e6b14a95e20e0e19853840f41b7e/R/randomcolor.R
+distinctColorPalette <-function(k=1, altCol=FALSE, runTsne=FALSE, seed=42) {
+    # k         number of colors (>= 1). May be ineffective for k > 40.
+    # altCol    Use an alternate color space
+    # runTsne   Preprocess color space with t-SNE to obtain distinct colors. Reduces performance.
+    # seed      number to be repeatable.
+
+    # Dependencies
+    library("cluster")
+    library("colorspace")
+    library("Rtsne")
+
+    # Compute a 2000 color spectrum and convert to LAB
+    runif(1)
+    old_seed <- .Random.seed ## Keep this seed work only locally https://stackoverflow.com/a/14324316/1608734
+    on.exit({.Random.seed <<- old_seed})
+    set.seed(seed)
+    n <- 2e3
+    currentColorSpace <- colorspace::RGB(runif(n), runif(n), runif(n))
+    currentColorSpace <- as(currentColorSpace, "LAB")
+    currentColorSpace <- currentColorSpace@coords
+    if (altCol) {
+        currentColorSpace <- t(unique(grDevices::col2rgb(scales::hue_pal(l=60:100)(n)))) ## Note: hue_pal no longer accepts multiple l
+    }
+
+    if (runTsne) {
+        # Run 2D t-SNE before clustering
+        tsne <- Rtsne(currentColorSpace, perplexity=50, check_duplicates=FALSE, pca=FALSE, max_iter=500)
+        pamx <- pam(tsne$Y, k)  # k-medoids
+        if (altCol) {
+            colors <- rgb(currentColorSpace[pamx$id.med, ], maxColorValue=255)
+        } else {
+            colors <- hex(LAB(currentColorSpace[pamx$id.med, ]))
+        }
+    } else {
+        # Set iter.max to 20 to avoid convergence warnings.
+        km <- kmeans(currentColorSpace, k, iter.max=20)
+        if (altCol) {
+            colors <- rgb(round(km$centers), maxColorValue=255)
+        } else {
+            colors <- unname(hex(LAB(km$centers)))
+        }
+    }
+
+    return(colors)
+}
+
