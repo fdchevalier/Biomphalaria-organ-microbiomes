@@ -1,5 +1,6 @@
 data/
 !data/sample-metadata.tsv
 database/
+graphs/
 results/
 .ipynb_checkpoints/
