@@ -599,7 +599,7 @@ for (r in 1:length(pop.ordr)) {
         myhc   <- hclust(mybiom.r.cdis[[r]][[i]], method = "average") %>% as.dendrogram()
         mymain <- paste(pop.ordr[r], mydist[i])
 
-        png(paste0(graph.d, mymain, ".png"))
+        pdf(paste0(graph.d, mymain, ".pdf"))
         par(mar = c(0,2,4,6)+0.1)
         plot(myhc, horiz = TRUE, axes = FALSE, main = mymain)
         dev.off()
@@ -744,6 +744,7 @@ dev.off()
 
 # Per Organ
 myclr.P <- tax_table(mybiom.P) %>% nrow() %>% distinctColorPalette(., seed=myseed - 223)
+names(myclr.P) <- tax_table(mybiom.P)[,2] %>% sort()
 for (r in 1:length(pop.ordr)) {
     mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[[r]])
 
@@ -771,37 +772,6 @@ for (r in 1:length(pop.ordr)) {
     # Vector color
     myclr <- myclr.P[ tax_table(mybiom.P)[,2] ]
 
-    ### Number of samples per population
-    #spl.count   <- count(sample_data(mybiom.P)[,2])
-    #pop.ls      <- as.vector(mybiom.P.m$Tissue) %>% sapply(., function(x) spl.count[ spl.count[,1] == x, 2])
-    #pop.wd[[r]] <- pop.ls
-
-    ### Correction factor to make sure to have odd number under bars
-    #if (r == 1) myftr <- 2
-    #if (r == 2) myftr <- 2
-
-    ### Label breaks
-    #mylabels.b <- rep("", nsamples(mybiom.tmp) / myftr)
-
-    ##
-    #mylabels.u  <- sapply(as.vector(mylabels), function(x) sample_data(mybiom.tmp)[x, "Tissue"]) %>% unlist() %>% as.vector() %>% unique()
-    #j <- 0
-    #for (l in mylabels.u) {
-    #    i <- spl.count[ spl.count[,1] == l,2]/2 / myftr
-    #    mylabels.b[ j+ceiling(i) ] <- l
-    #    j <- j+i*2
-    #}
-
-    #pop.wd[[r]] <- pop.wd[[r]]/myftr
-
-
-    # p[[3]] <- ggplot(mybiom.P.m, aes(x = Population, y = Abundance, fill = Phylum, width=pop.wd[[!!r]]*0.98)) +   # Use of quasiquotation !!r otherwise lastest slot of the list taken for plotting
-    #   geom_bar(stat = "identity") +
-    #   scale_x_discrete(limits=mylabels.b, labels=mylabels.b) +
-    #   scale_fill_manual(values = myclr) +
-    #   # Remove x axis title and legend
-    #   theme(axis.title.x = element_blank(), legend.position="none", axis.ticks = element_line(linetype=c("blank", rep("solid", length(mylabels.u))))) +     # axis.ticks needed to remove the first tick
-    #   ylab("Relative Abundance\n")
 
     p[[3]] <- ggplot(mybiom.P.m, aes(x = Type.code, y = Abundance, fill = Phylum,)) +   # Use of quasiquotation !!r otherwise lastest slot of the list taken for plotting
       geom_bar(stat = "identity") +
@@ -815,6 +785,14 @@ for (r in 1:length(pop.ordr)) {
 
     p.ls[[r]] <- p
 }
+
+pdf(paste0(graph.d,pop.ordr[[1]]," organ taxo-div.pdf"), width=8, height=5, useDingbats=FALSE)
+p.ls[[1]][[3]]
+dev.off()
+
+pdf(paste0(graph.d,pop.ordr[[2]]," organ taxo-div.pdf"), width=8, height=5, useDingbats=FALSE)
+p.ls[[2]][[3]]
+dev.off()
 
 #---------------------#
 # Taxonomic diversity #
