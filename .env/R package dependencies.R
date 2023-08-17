@@ -1,5 +1,5 @@
 # System
-options("repos" = c(CRAN = "https://cran.revolutionanalytics.com"))
+options("repos" = c(CRAN = "https://cloud.r-project.org"))
 library("devtools")
 library("BiocManager")
 
@@ -7,7 +7,7 @@ install_github("jalvesaq/colorout", ref="7ea9440", upgrade="never")
 
 
 install_bioc("3.10/microbiome", upgrade="never")
-install_bioc("3310/phyloseq",   upgrade="never")
+install_bioc("3.10/phyloseq",   upgrade="never")
 install_version("phylogram",  version="2.1.0",  upgrade="never")      # prune function
 #install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis", ref="6e09713", upgrade="never")
 #install_github("ropensci/taxa",   ref="49969dc", upgrade="never")
