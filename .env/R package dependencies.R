@@ -1,15 +1,15 @@
 # System
-options("repos" = c(CRAN = "https://cloud.r-project.org"))
+options("repos" = c(CRAN = "https://cloud.r-project.org", BIOC = "https://bioconductor.org/packages/3.10/bioc"))
 library("devtools")
 library("BiocManager")
 
 install_github("jalvesaq/colorout", ref="7ea9440", upgrade="never")
 
 # Microbiome
-install_bioc("3.10/microbiome", upgrade="never")
-install_bioc("3.10/phyloseq",   upgrade="never")
+install_version("microbiome", version="1.8.0",  upgrade="never")
+install_version("phyloseq",   version="1.30.0", upgrade="never")
 install_version("phylogram",  version="2.1.0",  upgrade="never")      # prune function
-install_version("picante", version="1.8", update=FALSE)          # PD function
+install_version("picante",    version="1.8",    upgrade="never")          # PD function
 install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis", ref="6e09713", upgrade="never")
 install_github("ropensci/taxa",   ref="49969dc", upgrade="never")
 install_github("jbisanz/qiime2R", ref="574708a", upgrade="never")
