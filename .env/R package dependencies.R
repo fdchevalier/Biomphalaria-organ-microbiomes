@@ -10,14 +10,12 @@ install_version("microbiome", version="1.8.0",  upgrade="never")
 install_version("phyloseq",   version="1.30.0", upgrade="never")
 install_version("phylogram",  version="2.1.0",  upgrade="never")      # prune function
 install_version("picante",    version="1.8",    upgrade="never")      # PD function
+install_version("dendextend", version="1.15.2", upgrade="never")
 install_version("usedist",    version="0.4.0",  upgrade="never")
 install_version("ape",        version="5.6-1",  upgrade="never")      # new version to avoid complex number in matrix
 install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis", ref="6e09713", upgrade="never")
 install_github("ropensci/taxa",   ref="49969dc", upgrade="never")
 install_github("jbisanz/qiime2R", ref="574708a", upgrade="never")
-
-# PCA analysis
-install_version("glmpca",  version="0.2.0",  upgrade="never")
 
 # Statistics
 install_version("multcompView",  version="0.1-8",  upgrade="never")
