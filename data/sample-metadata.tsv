@@ -24,8 +24,8 @@ E.1.Ba.L	E	1	Ba	Ba	Hepatopancreas	L	E1 Ba L	pink	morning	2019-06-26	2019-05-02	N
 E.1.Ba.O	E	1	Ba	Ba	Ovotestis	O	E1 Ba O	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
 E.1.Ba.S	E	1	Ba	Ba	Stomach	S	E1 Ba S	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
 E.1.Ba.G	E	1	Ba	Ba	Gut	G	E1 Ba G	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
-F.1.Ba.W	F	1	Ba	Ba	Whole snail 	W	F1 Ba W	pink	morning	2019-06-26	2019-05-02	2019-07-08	2019-07-11	7
-G.1.Ba.W	G	1	Ba	Ba	Whole snail 	W	G1 Ba W	pink	morning	2019-06-26	2019-05-02	2019-07-08	2019-07-10	6
+F.1.Ba.W	F	1	Ba	Ba	Whole snail	W	F1 Ba W	pink	morning	2019-06-26	2019-05-02	2019-07-08	2019-07-11	7
+G.1.Ba.W	G	1	Ba	Ba	Whole snail	W	G1 Ba W	pink	morning	2019-06-26	2019-05-02	2019-07-08	2019-07-10	6
 H.1.Ba.TK.a	H	1	Water	Ba	Tank	TK	H1a H2O Ba TK	pink	morning	2019-06-26	2019-05-02	NA	2019-07-03	2
 H.1.Ba.TK.b	H	1	Water	Ba	Tank	TK	H1b H2O Ba TK	pink	morning	2019-06-26	2019-05-02	NA	2019-07-02	1
 H.1.Ba.TY.a	H	1	Water	Ba	Tray	TY	H1a H2O Ba TY	pink	morning	2019-06-26	2019-05-02	NA	2019-07-11	7
@@ -55,8 +55,8 @@ E.2.Ba.L	E	2	Ba	Ba	Hepatopancreas	L	E2 Ba L	white	afternoon	2019-06-27	2019-05-2
 E.2.Ba.O	E	2	Ba	Ba	Ovotestis	O	E2 Ba O	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
 E.2.Ba.S	E	2	Ba	Ba	Stomach	S	E2 Ba S	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
 E.2.Ba.G	E	2	Ba	Ba	Gut	G	E2 Ba G	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
-F.2.Ba.W	F	2	Ba	Ba	Whole snail 	W	F2 Ba W	white	afternoon	2019-06-27	2019-05-24	2019-07-10	2019-07-11	7
-G.2.Ba.W	G	2	Ba	Ba	Whole snail 	W	G2 Ba W	white	afternoon	2019-06-27	2019-05-24	2019-07-10	2019-07-11	7
+F.2.Ba.W	F	2	Ba	Ba	Whole snail	W	F2 Ba W	white	afternoon	2019-06-27	2019-05-24	2019-07-10	2019-07-11	7
+G.2.Ba.W	G	2	Ba	Ba	Whole snail	W	G2 Ba W	white	afternoon	2019-06-27	2019-05-24	2019-07-10	2019-07-11	7
 H.2.Ba.TK.a	H	2	Water	Ba	Tank	TK	H2a H2O Ba TK	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-08	4
 H.2.Ba.TK.b	H	2	Water	Ba	Tank	TK	H2b H2O Ba TK	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-09	5
 H.2.Ba.TY.a	H	2	Water	Ba	Tray	TY	H2a H2O Ba TY	white	afternoon	2019-06-27	2019-05-24	NA	2019-07-03	2
@@ -86,8 +86,8 @@ E.3.BgBS90.L	E	3	Bg	BgBS90	Hepatopancreas	L	E3 BgBS90 L	yellow	morning	2019-06-2
 E.3.BgBS90.O	E	3	Bg	BgBS90	Ovotestis	O	E3 BgBS90 O	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
 E.3.BgBS90.S	E	3	Bg	BgBS90	Stomach	S	E3 BgBS90 S	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
 E.3.BgBS90.G	E	3	Bg	BgBS90	Gut	G	E3 BgBS90 G	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
-F.3.BgBS90.W	F	3	Bg	BgBS90	Whole snail 	W	F3 BgBS90 W	yellow	morning	2019-06-27	2019-05-13	2019-07-09	2019-07-10	6
-G.3.BgBS90.W	G	3	Bg	BgBS90	Whole snail 	W	G3 BgBS90 W	yellow	morning	2019-06-27	2019-05-13	2019-07-09	2019-07-11	7
+F.3.BgBS90.W	F	3	Bg	BgBS90	Whole snail	W	F3 BgBS90 W	yellow	morning	2019-06-27	2019-05-13	2019-07-09	2019-07-10	6
+G.3.BgBS90.W	G	3	Bg	BgBS90	Whole snail	W	G3 BgBS90 W	yellow	morning	2019-06-27	2019-05-13	2019-07-09	2019-07-11	7
 H.3.BgBS90.TK.a	H	3	Water	BgBS90	Tank	TK	H3a H2O BgBS90 TK	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-02	1
 H.3.BgBS90.TK.b	H	3	Water	BgBS90	Tank	TK	H3b H2O BgBS90 TK	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-09	5
 H.3.BgBS90.TY.a	H	3	Water	BgBS90	Tray	TY	H3a H2O BgBS90 TY	yellow	morning	2019-06-27	2019-05-13	NA	2019-07-03	3
@@ -116,8 +116,8 @@ E.4.BgBS90.L	E	4	Bg	BgBS90	Hepatopancreas	L	E4 BgBS90 L	orange	afternoon	2019-06
 E.4.BgBS90.O	E	4	Bg	BgBS90	Ovotestis	O	E4 BgBS90 O	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
 E.4.BgBS90.S	E	4	Bg	BgBS90	Stomach	S	E4 BgBS90 S	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
 E.4.BgBS90.G	E	4	Bg	BgBS90	Gut	G	E4 BgBS90 G	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
-F.4.BgBS90.W	F	4	Bg	BgBS90	Whole snail 	W	F4 BgBS90 W	orange	afternoon	2019-06-26	2018-07-01	2019-07-08	2019-07-11	7
-G.4.BgBS90.W	G	4	Bg	BgBS90	Whole snail 	W	G4 BgBS90 W	orange	afternoon	2019-06-26	2018-07-01	2019-07-09	2019-07-11	7
+F.4.BgBS90.W	F	4	Bg	BgBS90	Whole snail	W	F4 BgBS90 W	orange	afternoon	2019-06-26	2018-07-01	2019-07-08	2019-07-11	7
+G.4.BgBS90.W	G	4	Bg	BgBS90	Whole snail	W	G4 BgBS90 W	orange	afternoon	2019-06-26	2018-07-01	2019-07-09	2019-07-11	7
 H.4.BgBS90.TK.a	H	4	Water	BgBS90	Tank	TK	H4a H2O BgBS90 TK	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-03	3
 H.4.BgBS90.TK.b	H	4	Water	BgBS90	Tank	TK	H4b H2O BgBS90 TK	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-10	6
 H.4.BgBS90.TY.a	H	4	Water	BgBS90	Tray	TY	H4a H2O BgBS90 TY	orange	afternoon	2019-06-26	2018-07-01	NA	2019-07-08	4
