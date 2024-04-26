@@ -1,8 +1,8 @@
 # Title: microbiome_diversity_function.R
-# Version: 1.1
+# Version: 1.2
 # Author: Frédéric CHEVALIER <fcheval@txbiomed.org>
 # Created in: 2020-03-25
-# Modified in: 2020-08-31
+# Modified in: 2024-04-26
 
 
 
@@ -287,3 +287,13 @@ distinctColorPalette <-function(k=1, altCol=FALSE, runTsne=FALSE, seed=42) {
     return(colors)
 }
 
+
+#----------------#
+# Midpoint color #
+#----------------#
+
+midcol <- function(col1, col2) {
+    rgb_avg <- rowSums(cbind(col2rgb(col1), col2rgb(col2))) / 2 / 255
+    mid_col <- matrix(rgb_avg, ncol = 3) %>% rgb()
+    return(mid_col)
+}
