@@ -4,8 +4,6 @@
 # Author: Frédéric CHEVALIER <fcheval@txbiomed.org>
 # !! Created in: 2020-03-25 !!
 
-
-
 #==========#
 # Packages #
 #==========#
@@ -17,6 +15,7 @@ suppressMessages({
     library("magrittr")
     library("plyr")             # function count
     library("tidyr")
+    library("reshape")
 
     # Microbiome
     # library("DESeq2")         # !! TO INSTALL !!
@@ -26,21 +25,23 @@ suppressMessages({
     library("picante")          # PD function
     library("pairwiseAdonis")   # see github
     library("phylogram")        # prune function
-    # library("pvclust")        # !! TO INSTALL !!
-    # library("dendextend")     # pvclust_edges function    !! TO INSTALL !!
-    # library("usedist")        # dist_multi_centroids function !! TO INSTALL !!
+    # # library("pvclust")        # !! TO INSTALL !!
+    library("dendextend")     # pvclust_edges function    !! TO INSTALL !!
+    library("usedist")        # dist_multi_centroids function !! TO INSTALL !!
     library("lme4")
     library("lmerTest")
 
     # Graph
     library("colorspace")       # function rainbow_hcl
-    library("cowplot")
+    # library("cowplot")
     library("ggpubr")
     library("ggdendro")
     library("grid")             # function grid.rect
+    library("lemon")
+    library("UpSetR")
+
+# Maybe add vegan needed by shiftlegend
 })
-
-
 
 #===========#
 # Functions #
@@ -50,9 +51,7 @@ suppressMessages({
 setwd(file.path(getwd(), "scripts"))
 
 cat("Loading functions...\n")
-source("microbiome_func.R")
-
-
+source("microbiome_diversity_func.R")
 
 #===========#
 # Variables #
@@ -89,6 +88,7 @@ org.data <- matrix(c(
                 "TY", "Water tray",
                 "TK", "Water tank"), ncol=2, byrow=TRUE)
 
+org.tp <- org.data[ grep("TY|TK", org.data[,1], invert = TRUE), ]
 
 # Graph output directory
 graph.d <- "../graphs/"
@@ -99,8 +99,6 @@ theme_set(theme_classic())
 # Seed for reproducibility
 myseed <- 26017
 set.seed(myseed)
-
-
 
 #=================#
 # Data processing #
@@ -140,7 +138,6 @@ taxa[ taxa[,1] == "Unassigned", ] <- "Unassigned"
 taxa.tb             <- tax_table(as.matrix(taxa))
 taxa_names(taxa.tb) <- rownames(taxa)
 
-
 # Loading tree
 tree <- read_qza(tree.f)$data
 
@@ -153,21 +150,7 @@ md[,"Type.code"] <- factor(md[,"Type.code"], org.data[,1])
 mybiom <- phyloseq(asv.tb, taxa.tb, tree, sample_data(md))
 
 # Populations
-#mypop     <- cbind(rownames(md), md[,2:4])
-#mypop[,2] <- factor(mypop[,2], pop.ordr)
 mypop <- md
-
-## Number of replicates
-##mybiom.rep <- mybiom
-#rep    <- unclass(sample_data(mybiom)[,"Replicate"])[[1]]
-#nb.rep <- unique(rep)
-#min.seq <- rep(NA, length(nb.rep))
-##for (i in 1:length(nb.rep)) {
-##    min.seq[i] <- min(sample_sums(mybiom)[rep == nb.rep[i]])
-##}
-##myrows <- rep == nb.rep[which.max(min.seq)]
-##mybiom <- subset_samples(mybiom, myrows)
-
 
 # Cleaning data from contaminants
 nb.asv   <- nrow(tax_table(mybiom))
@@ -193,7 +176,22 @@ cat("\nNumber of ASVs removed:",
     "\n\t- eukaryotes:", sum(my.euk), "/", signif(sum(my.euk) / nb.unass * 100, 2), "% of the unassigned ASVs", "/", signif(sum(my.euk) / nb.asv * 100, 2), "% of the total ASVs",
     "\n\t- total:", sum(my.mt | my.cp | my.euk), "/", signif(sum(my.mt | my.cp | my.euk)/ nb.asv * 100, 2), "% of the total ASVs", "\n\n")
 
+# Number per snail species
+otu_nb_sp <- vector("list", nrow(pop.data)) %>% setNames(., pop.data[,1])
 
+for (i in pop.data[, 1]) {
+    mysp  <- paste0(i, ".")
+    mycln <- otu_table(mybiom) %>% colnames() %>% grep(org.tp[,1] %>% paste0(mysp, ., collapse="|"), ., value = TRUE)
+    otu_nm <- ((otu_table(mybiom)[, mycln] %>% rowSums()) > 0) %>% which() %>% names()
+    otu_unass <- otu_nm[otu_nm %in% rownames(tax_table(mybiom)[ tax_table(mybiom)[,1] == "Unassigned", ])]
+    otu_nb_sp[[i]] <- list(otu_nm, otu_unass)
+}
+
+cat("\nNumber of ASVs per snail species:\n")
+for (i in pop.data[, 1]) {
+    cat("\t- ", i, ": ", length(otu_nb_sp[[i]][[1]]), " (", length(otu_nb_sp[[i]][[2]]), " unassigned)\n", sep = "")
+}
+cat("\t- Common ASVs: ", intersect(otu_nb_sp[[1]][[1]], otu_nb_sp[[2]][[1]]) %>% length(), " (",  intersect(otu_nb_sp[[1]][[2]], otu_nb_sp[[2]][[2]]) %>% length(), ")\n", sep = "")
 
 #--------------------#
 # Rarefaction curves #
@@ -206,11 +204,9 @@ p <- ggrare(mybiom, step = 1000, color = "Population", se = FALSE, plot=FALSE) +
 # Adjust legend
 pdf(NULL)
 p <- shift_legend(p)
-dev.off()
+invisible(dev.off())
 
-ggsave(paste0(graph.d,"Fig. 2 - rarefaction.pdf"), p, height=7, width=7, useDingbats=FALSE)
-
-
+ggsave(paste0(graph.d, "Supp. Fig. 1 - rarefaction.pdf"), p, height=7, width=7, useDingbats=FALSE)
 
 #-----------#
 # Diversity #
@@ -221,21 +217,17 @@ mypd    <- pd(t(asv), tree)
 myalpha <- merge(myalpha, mypd, by="row.names")
 myalpha <- merge(myalpha, md, by.x=1, by.y="row.names")
 
-myidx <- matrix(c(#"observed",           "Observed richness",
-                  "chao1",              "Chao1 richness",
-                  "diversity_shannon",  "Shannon diversity",
+myidx <- matrix(c("observed",           "Observed richness",
                   "PD",                 "Faith's Phylogenetic diversity",
-                  "evenness_simpson",   "Simpson evenness"#,
-                  #"dominance_simpson",  "Simpson dominance"
+                  "evenness_simpson",   "Simpson evenness"
                   ), ncol=2, byrow=TRUE)
 
-
 # Statistical tests
-mya.test   <- vector("list", length(myidx[,1]))
-mygrp      <- apply(myalpha[, c("Type", "Population")], 1, paste, collapse="")
+mya.test <- vector("list", length(myidx[,1]))
+myorder  <- order(match(myalpha[,"Type.code"], org.data[,1]))
+mygrp    <- apply(myalpha[, c("Type", "Population")], 1, paste, collapse=" ") %>% factor(., levels = .[myorder] %>% unique())
 for (i in myidx[,1]) {
-    # mya.test[[ match(i,myidx[,1]) ]] <- pairwise.wilcox.test(myalpha[,i], myalpha[,c("Population", "Type")], p.adjust.method="none")
-    mya.test[[ match(i,myidx[,1]) ]] <- pairwise.wilcox.test(myalpha[,i], mygrp, p.adjust.method="none")
+    mya.test[[ match(i,myidx[,1]) ]] <- pairwise.wilcox.test(myalpha[,i], mygrp, p.adjust.method = "fdr")
 }
 
 mya.letters <- vector("list", length(myidx[,1]))
@@ -246,12 +238,81 @@ for (i in 1:length(mya.test)) {
     mya.letters[[i]] <- generate.label.df(d)
 }
 
-## => Needs to be exported
+# GLM
+myalpha2 <- myalpha[ myalpha[, "Species"] != "Water", ]
+myalpha2[, "Snail.ID"] <- paste0(myalpha2[, "Snail.ID"], myalpha2[, "Tank.ID"])
+myalpha2[, "Tank.ID"] %<>% as.factor()
 
+#myalpha3 <- myalpha2[ myalpha2[, "Type"] != "Whole snail ", ]
 
+##indices <- c("observed", "chao1", "diversity_shannon", "evenness_simpson", "dominance_simpson", "PD")
+#indices <- myidx[,1]
+## myconds <- c("Collection.time", "Collection.date", "Tank.ID")
+#myconds <- c("Collection.time", "Collection.date")
+#myglms  <- vector("list", length(indices)) %>% setNames(., indices)
+## for (a in 2:24) {
+#for (a in indices) {
+#    myglms[[a]] <- vector("list", length(myconds)) %>% setNames(., myconds)
+#    for (i in myconds) {
+#        # myglm <- lmer(paste(colnames(myalpha2)[a], "~ Species * Type *", i, "+ (1|Snail.ID)"), data = myalpha2)
+#        myglm   <- lmer(paste(a, "~ Species * Type *", i, "+ (1|Snail.ID)"), data = myalpha2)
+#        print(BIC(myglm))
+#        myanova <- anova(myglm)
+#        myglms[[a]][[i]] <- list(glm = myglm, anova = myanova)
+#    }
+#}
 
-## Graph
-### No stat added on graph because unreadable
+indices <- myidx[,1]
+myglms  <- vector("list", length(indices)) %>% setNames(., indices)
+for (a in indices) {
+    ## myglms[[a]] <- vector("list", length(myconds)) %>% setNames(., myconds)
+    # myglm   <- lmer(paste(a, "~ Species * Type + (1|Snail.ID) + (1|Tank.ID)"), data = myalpha2) ## Note: This model gives the same results has the one below.
+    myglm   <- lmer(paste(a, "~ Species * Type + (1|Snail.ID)"), data = myalpha2)
+    print(BIC(myglm))
+    myanova <- anova(myglm)
+    mycoef <- myglm %>% summary() %>% coef()
+
+    # Output results
+    append <- ifelse(match(a, indices) == 1, FALSE, TRUE)
+    outfile <- "a-div_lmer_results.txt"
+    write(a, outfile, append = append)
+    write.table(mycoef, outfile, append = TRUE, sep = "\t")
+
+    # Store results
+    myglms[[a]] <- list(glm = myglm, anova = myanova, coef = mycoef)
+}
+
+myconds <- c("Collection.time", "Collection.date")
+myglms2 <- vector("list", length(pop.data[,1])) %>% setNames(., pop.data[,1])
+for (p in pop.data[,1]) {
+    myrows  <- myalpha2[, "Population"] == p
+    myglms2[[p]] <- vector("list", length(indices)) %>% setNames(., indices)
+    for (a in indices) {
+        myglms2[[p]][[a]] <- vector("list", length(myconds)) %>% setNames(., myconds)
+        for (i in myconds) {
+            myglm   <- lmer(paste(a, "~ Type *", i, "+ (1|Snail.ID)"), data = myalpha2[myrows, ])
+            print(BIC(myglm))
+            myanova <- anova(myglm)
+            mycoef <- myglm %>% summary() %>% coef()
+
+            # Output results
+            append <- ifelse(match(a, indices) == 1 & match(i, myconds) == 1, FALSE, TRUE)
+            outfile <- "a-div_cond_lmer_results.txt"
+            write(paste(a, i), outfile, append = append)
+            write.table(mycoef, outfile, append = TRUE, sep = "\t")
+
+            # Store results
+            myglms2[[p]][[a]][[i]] <- list(glm = myglm, anova = myanova, coef = mycoef)
+        }
+    }
+}
+
+#~~~~~~~~~#
+# Figures #
+#~~~~~~~~~#
+
+# Boxplot for each relevant index
+## No stat added on graph because unreadable
 p <- vector("list", nrow(myidx))
 for (i in myidx[,1]) {
     df.tmp <- data.frame(i=myalpha[,i], Tissue=myalpha[,"Type.code"], Species=myalpha[,"Population"])
@@ -265,91 +326,42 @@ for (i in myidx[,1]) {
             theme(plot.title = element_text(hjust =0.5), legend.position="none")
 }
 
+pdf(NULL)
+p <- ggarrange(plotlist = p, labels = LETTERS[1:length(p)], ncol = 3, nrow = 1, common.legend = TRUE, legend = "bottom", align = "hv")
+invisible(dev.off())
+ggsave(paste0(graph.d, "Fig. 2 - alpha-div.pdf"), p, width = 10, height = 3, useDingbats = FALSE)
 
-p <- ggarrange(plotlist=p, labels=LETTERS[1:length(p)], ncol=2, nrow=ceiling(length(p)/2), common.legend=TRUE, legend="bottom", align="hv")
-ggsave(paste0(graph.d,"alpha-div.pdf"), p, width=10, height=6, useDingbats=FALSE)
-
-
-
-### Rarity
-#myidx <- matrix(c("rarity_low_abundance", "Low abundance"), ncol=2, byrow=TRUE)
-#
-#myr.test    <- vector("list", length(nb.rep))
-#myr.letters <- vector("list", length(nb.rep))
-#
-#for (r in nb.rep) {
-#    myr.test[[r]]   <- vector("list", length(myidx[,1]))
-#    for (i in myidx[,1]) {
-#        myr.test[[r]][[ match(i,myidx[,1]) ]] <- pairwise.wilcox.test(myalpha[myalpha["Replicate"]==r,i], myalpha[myalpha["Replicate"]==r,"Population"], p.adjust.method="none")
-#    }
-#
-#    myr.letters[[r]] <- vector("list", length(myidx[,1]))
-#    for (i in 1:length(myr.test[[r]])) {
-#        d <- as.vector(myr.test[[r]][[i]]$p.value)
-#        names(d) <- sapply(colnames(myr.test[[r]][[i]]$p.value), function(x) paste0(x, "-", rownames(myr.test[[r]][[i]]$p.value))) %>% as.vector()
-#        d <- d[!is.na(d)]
-#        myr.letters[[r]][[i]] <- generate.label.df(d)
-#    }
-#}
-#
-#
-#
-#p <- vector("list", length(nb.rep))
-#for (r in nb.rep) {
-#    p[[r]] <- vector("list", length(myidx[,1]))
-#    for (i in myidx[,1]) {
-#        df.tmp <- data.frame(i=myalpha[myalpha["Replicate"]==r,i], Population=myalpha[myalpha["Replicate"]==r,"Population"])
-#
-#        p[[r]][[match(i,myidx)]] <- ggplot(df.tmp, aes(x=Population, y=i, fill=Population)) +
-#                geom_blank(data=df.tmp, aes(x=Population, y=i*1.1)) +
-#                geom_boxplot() + xlab("") + ylab("") + #gtitle(myidx[myidx[,1] == i,2]) +
-#                stat_summary(geom = 'text', label = myr.letters[[r]][[match(i,myidx[,1])]][,1], fun.y = max, vjust = -1) +
-#                scale_fill_manual(values=pop.clr) +
-#                theme(plot.title = element_text(hjust =0.5), legend.position="none")
-#
-#    }
-#}
-#
-#myletters <- NULL
-#if (nrow(myidx) > 1) { myletters <- LETTERS[1:nrow(myidx)] }
-#
-#pdf(paste0(graph.d,"rarity.pdf"), width=10, height=10)
-#ggarrange(plotlist=p[[1]], labels=myletters, ncol=length(p[[1]]), nrow=ceiling(length(p[[r]])/2))
-#dev.off()
-#
-#pdf(paste0(graph.d,"rarity_all.pdf"), width=10*length(nb.rep), height=10)
-#ggarrange( ggarrange(plotlist=p[[1]], labels=LETTERS[1], ncol=length(p[[r]]), nrow=ceiling(length(p[[r]])/2)),
-#           ggarrange(plotlist=p[[2]], labels=LETTERS[2], ncol=length(p[[r]]), nrow=ceiling(length(p[[r]])/2)),
-#           ncol=length(nb.rep), nrow=1)
-#dev.off()
-
-# GLM
-myalpha2 <- myalpha[ myalpha[, "Species"] != "Water", ]
-myalpha2[, "Snail.ID"] <- paste0(myalpha2[, "Snail.ID"], myalpha2[, "Tank.ID"])
-
-indices <- c("observed", "chao1", "diversity_shannon", "evenness_simpson", "dominance_simpson", "PD")
-myconds <- c("Collection.time", "Collection.date", "Tank.ID")
-myglms  <- vector("list", length(indices))
-names(myglms) <- indices
-# for (a in 2:24) {
-for (a in indices) {
-    myglms[[a]] <- vector("list", 3)
-    names(myglms[[a]]) <- myconds
-    for (i in myconds) {
-        # myglm <- lmer(paste(colnames(myalpha2)[a], "~ Species * Type *", i, "+ (1|Snail.ID)"), data = myalpha2)
-        myglm   <- lmer(paste(a, "~ Species * Type *", i, "+ (1|Snail.ID)"), data = myalpha2)
-        myanova <- anova(myglm)
-        myglms[[a]][[i]] <- list(glm = myglm, anova = myanova)
-    }
+# P-value matrix for each relevant index
+p <- vector("list", nrow(myidx))
+mybreaks <- sapply(mya.test, function(x) min(x$p.value, na.rm=T)) %>% min() %>% c(10^(seq(log10(.), log10(0.05), length.out=4)), 1)
+for (i in 1:nrow(myidx)) {
+    # mybreaks <- c(10^(seq(log10(min(mya.test[[i]]$p.value, na.rm = T)), log10(0.05), length.out = 4)), 1)
+    x_clr <- rep(pop.data[1, 2], ncol(mya.test[[i]]$p.value))
+    x_clr[ grepl(pop.data[2, 1], colnames(mya.test[[i]]$p.value)) ] <- pop.data[2, 2]
+    y_clr <- rev(x_clr)
+    p[[i]] <- plotPvalues(mya.test[[i]]$p.value, border.col="black", pval.col="black", font.size=3) +
+        xlab("") + ylab("") +
+        scale_fill_gradient2(low = "red", mid = "yellow", high = "white", limits = c(NA, 0.05), guide = "colorbar", na.value = "transparent", trans = "log10", breaks = mybreaks, label = format(mybreaks, digit = 2, scientific = TRUE)) +
+        guides(fill = guide_colourbar(barwidth = 9, title.vjust = 0.75)) +
+        theme(axis.line = element_blank(), axis.ticks = element_blank(), legend.position = "none", axis.text.x = element_text(color = x_clr, angle = 90, vjust = 0.5, hjust=1), axis.text.y = element_text(color = y_clr)) +
+        ggtitle(myidx[i, 2])
 }
 
+# pdf(paste0(graphs.d, "Supp. Fig. 1 - alpha-div_p-val.pdf"), height = 10, width = 10)
+# lapply(p, print) %>% invisible()
+# invisible(dev.off())
+pdf(NULL)
+p <- ggarrange(plotlist = p, labels = LETTERS[1:length(p)], ncol = 3, nrow = 1, common.legend = TRUE, legend = "bottom", align = "hv")
+invisible(dev.off())
+ggsave(paste0(graph.d, "Supp. Fig. 2 - alpha-div_p-val_v3.pdf"), p, width = 30, height = 10, useDingbats = FALSE)
 
 #------#
 # PCoA #
 #------#
 
 # For PCoA
-mydist <- c("jaccard", "Unweighted UniFrac", "Weighted UniFrac", "bray")
+# mydist <- c("jaccard", "Unweighted UniFrac", "Weighted UniFrac", "bray")
+mydist <- c("Unweighted UniFrac", "Weighted UniFrac")
 
 # This links could be use for non-parametric test instead of PERMANOVA but does not work properly.
 # source("https://raw.githubusercontent.com/alekseyenko/Tw2/27520182e704ec28324e74ddeab0fb584c7bbf10/code/Tw2.R")
@@ -370,6 +382,10 @@ for (r in 1:length(pop.ordr)) {
     # Data
     mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[[r]])
     mybiom.r   <- rarefy_even_depth(mybiom.tmp, rngseed=myseed, verbose = FALSE)
+
+    # Correcting tree
+    ## see: https://github.com/joey711/phyloseq/issues/936
+    phy_tree(mybiom.r) %<>% ape::multi2di(.)
 
     # Lists for saving results
     mybiom.r.cdis[[r]]   <- vector("list", length(mydist))
@@ -407,7 +423,11 @@ for (r in 1:length(pop.ordr)) {
         ## Run test
         mybiom.r.stat[[r]][[myls.idx]]   <- adonis(mydist.tmp ~ Type, data = get_variable(mybiom.r), permutations = 1000)
         set.seed(myseed)
-        mybiom.r.stat.p[[r]][[myls.idx]] <- pairwise.adonis(mydist.tmp2, mypop.tmp[, "Type"], perm = 1000)
+        # mybiom.r.stat.p[[r]][[myls.idx]] <- pairwise.adonis(mydist.tmp2, mypop.tmp[, "Type"], perm = 1000)
+        mybiom.r.stat.p[[r]][[myls.idx]] <- pairwise.adonis(mydist.tmp2, mypop.tmp[, "Type"],  p.adjust.m = "fdr", perm = 1000)
+
+        ## Test impact of sampling time TO BE DONE AND INCLUDE IN PAPER
+        adonis(mydist.tmp ~ Collection.date + Type, data = mypop.tmp[,c("Type", "Snail.ID", "Collection.time", "Collection.date")], permutations = 1000)
 
         # Dispersion stat
         mybiom.r.stat.b[[r]][[myls.idx]] <- betadisper(mydist.tmp, get_variable(mybiom.r)[, "Type"], type = "centroid")
@@ -417,7 +437,8 @@ for (r in 1:length(pop.ordr)) {
         mynames <- sort(mypop[, "Type"]) %>% unique
         mymat <- matrix(NA, ncol=length(mynames), nrow=length(mynames))
         colnames(mymat) <- rownames(mymat) <- mynames
-        mymat[lower.tri(mymat)] <- mybiom.r.stat.p[[r]][[myls.idx]][,6]
+        # mymat[lower.tri(mymat)] <- mybiom.r.stat.p[[r]][[myls.idx]][,6]
+        mymat[lower.tri(mymat)] <- mybiom.r.stat.p[[r]][[myls.idx]][,7]
         mymat <- t(mymat)
         mymat[lower.tri(mymat)] <- mybiom.r.stat.T[[r]][[myls.idx]]$group[,4]
         mybiom.r.stat.m[[r]][[myls.idx]] <- mymat
@@ -433,63 +454,152 @@ for (r in 1:length(pop.ordr)) {
     names(mybiom.r.stat.m[[r]]) <- mydist
 }
 
+# # Centroid distances between species and populations
+
+# ## List species and remove water
+# sp.vec <- sample_data(mybiom)$Species %>% as.character() %>% unique()
+# sp.vec <- sp.vec[! sp.vec %in% "Water"]
+
+# ## List samples per species
+# spl.ls        <- sapply(sp.vec, function(x) sample_data(mybiom)[ sample_data(mybiom)$Species == x, "Population"] %>% unique())
+# names(spl.ls) <- sp.vec
+
+# for (r in 1:length(pop.ordr)) {
+#     cat("\nCentroid distances for replicate ", r, ":\n", sep="")
+
+#     for(i in mydist) {
+#         mymt <- mybiom.r.cdis[[r]][[i]] %>% as.matrix()
+
+#         # Add NA
+#         mymt[upper.tri(mymt, diag = TRUE)] <- NA
+
+#         # Remove water
+#         myspl <- ! rownames(mymt) %in% "Water"
+#         mymt  <- mymt[myspl, myspl]
+
+#         # Test selection
+#         norm <- lapply(spl.ls, function(x) shapiro.test(as.vector(mymt[, x]))$p.value > 0.05) %>% unlist() %>% all()
+
+#         # Test
+#         if (norm) {
+#             p.val <- t.test(mymt[, spl.ls[[1]]], mymt[, spl.ls[[2]]])$p.value %>% signif(., 2)
+#             test  <- "T test"
+#         } else {
+#             p.val <- wilcox.test(mymt[, spl.ls[[1]]], mymt[, spl.ls[[2]]])$p.value %>% signif(., 2)
+#             test  <- "Wilcoxon test"
+#         }
+
+#         # Average distance
+#         average.d <- lapply(spl.ls, function(x) mean(mymt[, x], na.rm=TRUE) %>% signif(., 2))
+
+#         cat("\t- ", tools::toTitleCase(i), " distance: the average distance between Ba and Bg is ", average.d[[1]], " and the average distance within Bg is ", average.d[[2]], " (", test, "; p-value :", p.val, ").\n", sep="")
+
+#     }
+# }
+
+# UPGMA Tree
+myhc <- vector("list", length(pop.ordr)) %>% setNames(., pop.ordr)
+for (r in 1:length(pop.ordr)) {
+    myhc[[r]] <- vector("list", length(mydist)) %>% setNames(., mydist)
+    for (i in 1:length(mydist)) {
+        myhc[[r]][[i]] <- hclust(mybiom.r.cdis[[r]][[i]], method = "average")
+    }
+}
+
+# GLM
+myalpha2 <- myalpha[ myalpha[, "Species"] != "Water", ]
+myalpha2[, "Snail.ID"] <- paste0(myalpha2[, "Snail.ID"], myalpha2[, "Tank.ID"])
+myalpha2[, "Tank.ID"] %<>% as.factor()
+
+##indices <- c("observed", "chao1", "diversity_shannon", "evenness_simpson", "dominance_simpson", "PD")
+#indices <- myidx[,1]
+## myconds <- c("Collection.time", "Collection.date", "Tank.ID")
+#myconds <- c("Collection.time", "Collection.date")
+#myglms  <- vector("list", length(indices)) %>% setNames(., indices)
+## for (a in 2:24) {
+#for (a in indices) {
+#    myglms[[a]] <- vector("list", length(myconds)) %>% setNames(., myconds)
+#    for (i in myconds) {
+#        # myglm <- lmer(paste(colnames(myalpha2)[a], "~ Species * Type *", i, "+ (1|Snail.ID)"), data = myalpha2)
+#        myglm   <- lmer(paste(a, "~ Species * Type *", i, "+ (1|Snail.ID)"), data = myalpha2)
+#        print(BIC(myglm))
+#        myanova <- anova(myglm)
+#        myglms[[a]][[i]] <- list(glm = myglm, anova = myanova)
+#    }
+#}
+
+indices <- myidx[,1]
+myglms  <- vector("list", length(indices)) %>% setNames(., indices)
+for (a in indices) {
+    myglms[[a]] <- vector("list", length(myconds)) %>% setNames(., myconds)
+    # myglm   <- lmer(paste(a, "~ Species * Type + (1|Snail.ID) + (1|Tank.ID)"), data = myalpha2) ## Note: This model gives the same results has the one below.
+    myglm   <- lmer(paste(a, "~ Species * Type + (1|Snail.ID)"), data = myalpha2)
+    print(BIC(myglm))
+    myanova <- anova(myglm)
+    myglms[[a]] <- list(glm = myglm, anova = myanova)
+}
+
 #~~~~~~~~~#
 # Figures #
 #~~~~~~~~~#
 
 # Axes to plot
-myax <- list(c(1,2), c(1,3), c(2,3))
+myax <- list(c(1,2), c(1,3), c(3,2))
+
+# # List to save plots
+# p.ls.r <- vector("list", length(pop.ordr))
+
+# for (r in 1:length(pop.ordr)) {
+
+#     # Data
+#     mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[[r]])
+#     mybiom.r <- rarefy_even_depth(mybiom.tmp, rngseed=myseed, verbose=FALSE)
+
+#     p.ls.r[[r]] <- vector("list", length(mydist) * length(myax))
+
+#     k <- 0
+#     for (i in 1:length(mydist)) {
+#         for (j in 1:length(myax)) {
+#             mytitle <- ""
+#             if (j == 1) { mytitle <- tools::toTitleCase(mydist[i]) }
+
+#             k <- k + 1
+#             p.ls.r[[r]][[k]] <- plot_ordination(mybiom.r, mybiom.r.pcoa[[r]][[i]], color = "Type", axes=myax[[j]]) +
+#                            # scale_color_manual(values = org.data[,3]) +
+#                            stat_ellipse(type = "norm") +
+#                            # stat_ellipse(type = "euclid") +
+#                            # stat_ellipse(type = "t", geom = "polygon") +
+#                            ggtitle(mytitle) +
+#                            theme(axis.text = element_text(size = rel(0.45))) +
+#                            theme(axis.title = element_text(size = rel(0.6))) +
+#                            theme(legend.position="none")
+#         }
+#     }
+# }
+
+# myletters <- lapply(1:length(mydist), function(x) c(LETTERS[x], rep("",length(myax)-1))) %>% unlist()
+
+# mylg <- length(p.ls.r[[1]])
+# pdf(NULL)
+# p <- ggarrange(plotlist=p.ls.r[[1]], nrow=length(p.ls.r[[1]])/3, ncol=3, common.legend=TRUE, legend="bottom", labels=myletters)
+# invisible(dev.off())
+
+# ggsave(paste0(graph.d,"b-div.pdf"), p, width=3.5*3, height=3.5*length(p.ls.r[[1]])/3, useDingbats=FALSE)
+
+# # Panel with replicates
+# pdf(NULL)
+# p <- ggarrange(ggarrange(plotlist=p.ls.r[[1]], nrow=length(p.ls.r[[1]])/3, ncol=3, common.legend=TRUE, legend="bottom"),
+#                # as_ggplot(grid.lines(c(0.5,0.5), c(0,1), gp=gpar(lwd=1.5, col="black"))),
+#                ggarrange(plotlist=p.ls.r[[2]], nrow=length(p.ls.r[[2]])/3, ncol=3, common.legend=TRUE, legend="bottom"),
+#                ncol=length(pop.ordr)+1, nrow=1, widths=c(1,0.01,1), labels=c(LETTERS[1], "", LETTERS[2]))
+# invisible(dev.off())
+
+# ggsave(paste0(graph.d,"Supp. Fig. 4 - b-div_all.pdf"), p, width=3.5*3*2, height=3.5*length(p.ls.r[[1]])/3, useDingbats=FALSE)
 
 # List to save plots
-p.ls.r <- vector("list", length(pop.ordr))
-
-for (r in 1:length(pop.ordr)) {
-
-    # Data
-    mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[[r]])
-    mybiom.r <- rarefy_even_depth(mybiom.tmp, rngseed=myseed, verbose=FALSE)
-
-    p.ls.r[[r]] <- vector("list", length(mydist) * length(myax))
-
-    k <- 0
-    for (i in 1:length(mydist)) {
-        for (j in 1:length(myax)) {
-            mytitle <- ""
-            if (j == 1) { mytitle <- tools::toTitleCase(mydist[i]) }
-
-            k <- k + 1
-            p.ls.r[[r]][[k]] <- plot_ordination(mybiom.r, mybiom.r.pcoa[[r]][[i]], color = "Type", axes=myax[[j]]) +
-                           # scale_color_manual(values = org.data[,3]) +
-                           stat_ellipse(type = "norm") +
-                           ggtitle(mytitle) +
-                           theme(axis.text = element_text(size = rel(0.45))) +
-                           theme(axis.title = element_text(size = rel(0.6))) +
-                           theme(legend.position="none")
-        }
-    }
-}
-
-
-myletters <- lapply(1:length(mydist), function(x) c(LETTERS[x], rep("",length(myax)-1))) %>% unlist()
-
-mylg <- length(p.ls.r[[1]])
-p <- ggarrange(plotlist=p.ls.r[[1]], nrow=length(p.ls.r[[1]])/3, ncol=3, common.legend=TRUE, legend="bottom", labels=myletters)
-
-ggsave(paste0(graph.d,"b-div.pdf"), p, width=3.5*3, height=3.5*length(p.ls.r[[1]])/3, useDingbats=FALSE)
-
-# Panel with replicates
-p <- ggarrange(ggarrange(plotlist=p.ls.r[[1]], nrow=length(p.ls.r[[1]])/3, ncol=3, common.legend=TRUE, legend="bottom"),
-               as_ggplot(grid.lines(c(0.5,0.5), c(0,1), gp=gpar(lwd=1.5, col="black"))),
-               ggarrange(plotlist=p.ls.r[[2]], nrow=length(p.ls.r[[2]])/3, ncol=3, common.legend=TRUE, legend="bottom"),
-               ncol=length(nb.rep)+1, nrow=1, widths=c(1,0.01,1), labels=c(LETTERS[1], "", LETTERS[2]))
-
-ggsave(paste0(graph.d,"Supp. Fig. 4 - b-div_all.pdf"), p, width=3.5*3*2, height=3.5*length(p.ls.r[[1]])/3, useDingbats=FALSE)
-
-
-# List to save plots
-p.ls.r <- vector("list", length(pop.ordr))
 p.ls.t <- vector("list", length(pop.ordr))
 p.ls.d <- vector("list", length(pop.ordr))
+mytitle <- vector("list", length(pop.ordr))
 
 for (r in 1:length(pop.ordr)) {
 
@@ -497,46 +607,68 @@ for (r in 1:length(pop.ordr)) {
     mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[[r]])
     mybiom.r   <- rarefy_even_depth(mybiom.tmp, rngseed=myseed, verbose=FALSE)
 
-    p.ls.r[[r]] <- vector("list", length(mydist))
     p.ls.t[[r]] <- vector("list", length(mydist))
     p.ls.d[[r]] <- vector("list", length(mydist))
+    mytitle[[r]] <- vector("list", length(mydist))
 
     for (i in 1:length(mydist)) {
-        mytitle <- tools::toTitleCase(mydist[i])
+        # mytitle <- paste(" ", pop.ordr[[r]], "-", tools::toTitleCase(mydist[i]))
+        mytitle[[r]][[i]] <- paste(pop.ordr[[r]], "-", tools::toTitleCase(mydist[i]))
 
-        p.ls.r[[r]][[i]] <- plot_ordination(mybiom.r, mybiom.r.pcoa[[r]][[i]], color = "Type.code", axes=myax[[1]]) +
-                       # scale_color_manual(values = org.data[,3]) +
-                       stat_ellipse(type = "norm") +
-                       ggtitle(mytitle) +
-                       theme(legend.position="none")
+        # Plot tree
+        myhc_tmp <- myhc[[r]][[i]]
+        myordr <- c(grep("Tank|Tray", labels(myhc_tmp), value = TRUE), grep("Tank|Tray", labels(myhc_tmp), invert = TRUE, value = TRUE))
+        myhc_tmp <- as.dendrogram(myhc_tmp) %>% dendextend::rotate(., myordr) %>% set("labels_cex", 0.75) %>% set("labels", paste(" ", labels(.))) %>% set("branches_lwd", 0.5)
+
+        if (! grepl("Tank|Tray", labels(myhc_tmp))[1]) {
+            myordr <- c(grep("Whole snail|Hemolymph", labels(myhc_tmp), invert = TRUE, value = TRUE), grep("Whole|Hemolymph", labels(myhc_tmp), value = TRUE))
+            myhc_tmp <- myhc_tmp %>% dendextend::rotate(., myordr)
+        }
+
+        # # Reroot tray with environment if needed
+        # tree_tb <- cutree(myhc_tmp, k=1:attributes(myhc_tmp)$members)
+        # if (! (grepl("Tank|Tray", rownames(tree_tb)[tree_tb[,2] == 2]) %>% any())) {
+        #     root     <- phylogram::prune(myhc_tmp, pattern = "Tank|Tray", keep = TRUE)
+        #     subtree  <- phylogram::prune(myhc_tmp, pattern = "Tank|Tray", keep = FALSE)
+        #     myhc_tmp <- list(root, subtree) %>% remidpoint() %>% as.cladogram()
+        # }
+
+        # mylim <- range(pretty(c(0, attributes(myhc_tmp)$height)))
+        p.ls.d[[r]][[i]] <- as.ggdend(myhc_tmp) %>% ggplot(., horiz = TRUE) +
+                                # ylab("Heights") +
+                                coord_flip(clip = "off") +
+                                # coord_flex_flip(bottom = capped_horizontal("both")) +
+                                # labs(title = mytitle) +
+                                theme(axis.line = element_blank(), axis.ticks = element_blank(), axis.text.x = element_text(), plot.margin = unit(c(1.2, 5, 1, 1), "lines"))
+                                # theme(axis.line.x = element_line(size = 0.5), axis.ticks.x = element_line(size = 0.5), axis.text.x = element_text(), plot.margin = unit(c(0, 4, 6, 0), "lines"))
 
         mymat     <- mybiom.r.stat.m[[r]][[i]]
-        mydist.mt <- mybiom.r.cdis[[r]][[i]] %>% as.matrix()
-        mydist.mt[upper.tri(mydist.mt, diag = TRUE)] <- NA
         mybreaks <- c(10^(seq(log10(min(mymat, na.rm=T)), log10(0.05), length.out=4)), 1)
 
-        p.ls.t[[r]][[i]] <- plotPvalues(mymat, border.col="black", pval.col="black", font.size=3) +
+        p.ls.t[[r]][[i]] <- plotPvalues(mymat, border.col="black", pval.col="black", font.size=2) +
                     xlab(expression(paste(beta,"-dispersion test"))) + ylab("Permanova test") +
+                    # scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
                     scale_fill_gradient2(low = "red", mid = "yellow", high = "white", limits = c(NA, 0.05), guide = "colorbar", na.value = "transparent", trans = "log10", breaks = mybreaks, label = format(mybreaks, digit = 2, scientific = TRUE)) +
                     guides(fill = guide_colourbar(barwidth = 9, title.vjust = 0.75)) +
-                    theme(axis.line = element_blank(), axis.ticks = element_blank(), legend.position = "none")
+                    theme(axis.line = element_blank(), axis.ticks = element_blank(), axis.text.x = element_text(angle = 30, hjust = 1), legend.position = "none")
 
-        p.ls.d[[r]][[i]] <- plotPvalues(mydist.mt, border.col="black", pval.col="black", font.size=3) +
-                    # xlab(expression(paste(beta,"-dispersion test"))) + ylab("Permanova test") +
-                    # scale_fill_gradient2(low = "red", mid = "yellow", high = "white", limits = c(NA, 0.05), guide = "colorbar", na.value = "transparent", trans = "log10", breaks = mybreaks, label = format(mybreaks, digit = 2, scientific = TRUE)) +
-                    # guides(fill = guide_colourbar(barwidth = 9, title.vjust = 0.75)) +
-                    theme(axis.line = element_blank(), axis.ticks = element_blank(), legend.position = "none")
     }
 }
 
-mylg <- length(p.ls.r[[1]])
-p <- ggarrange(ggarrange(plotlist=p.ls.r[[1]], nrow=length(p.ls.r[[1]]), ncol=1, common.legend=TRUE, legend="bottom", labels=LETTERS[1:mylg]),
-               ggarrange(plotlist=p.ls.t[[1]], nrow=length(p.ls.t[[1]]), ncol=1, common.legend=TRUE, legend="bottom"),
+# Flatten lists for plotting
+p.ls.d %<>% purrr::flatten()
+p.ls.t %<>% purrr::flatten()
+
+# mylg <- length(p.ls.d)
+mylg <- paste0(LETTERS[1:length(p.ls.d)], ". ",  unlist(mytitle))
+pdf(NULL)
+# p <- ggarrange(ggarrange(plotlist=p.ls.d, nrow=length(p.ls.d), ncol=1, common.legend=TRUE, legend="bottom", labels=LETTERS[1:mylg]),
+p <- ggarrange(ggarrange(plotlist=p.ls.d, nrow=length(p.ls.d), ncol=1, common.legend=TRUE, legend="bottom", labels=mylg, hjust = 0),
+               ggarrange(plotlist=p.ls.t, nrow=length(p.ls.t), ncol=1, common.legend=TRUE, legend="bottom"),
                ncol=2, nrow=1)
+invisible(dev.off())
 
-ggsave(paste0(graph.d,"Fig. 3 - b-div.pdf"), p, width=5*2, height=3.5*length(p.ls.r[[1]]), useDingbats=FALSE)
-
-
+ggsave(paste0(graph.d, "Fig. 3 - b-div_FDR.pdf"), p, width = 5 * 2, height = 3.5 * length(p.ls.d), useDingbats = FALSE)
 
 ## vvv to delete
 myax <- list(c(1,2), c(1,3), c(2,3))
@@ -575,7 +707,6 @@ pdf(NULL)
 p <- ggarrange(plotlist=p.ls.r[[1]], nrow=length(p.ls.r[[1]])/3, ncol=3, common.legend=TRUE, legend="bottom", labels=myletters)
 dev.off()
 
-
 pdf(paste0(graph.d,"b-div.pdf"), width=3.5*3, height=3.5*length(p.ls.r[[1]])/3)
 print(p)
 dev.off()
@@ -587,57 +718,28 @@ p <- ggarrange(ggarrange(plotlist=p.ls.r[[1]], nrow=length(p.ls.r[[1]])/3, ncol=
                ncol=2, nrow=1, labels=LETTERS[1:2])
 dev.off()
 
-
 pdf(paste0(graph.d,"b-div_all.pdf"), width=3.5*3*2, height=3.5*length(p.ls.r[[1]])/3)
 print(p)
 dev.off()
 
-
-# UPGMA Tree
-for (r in 1:length(pop.ordr)) {
-    for (i in 1:length(mydist)) {
-        myhc   <- hclust(mybiom.r.cdis[[r]][[i]], method = "average") %>% as.dendrogram()
-        mymain <- paste(pop.ordr[r], mydist[i])
-
-        pdf(paste0(graph.d, mymain, ".pdf"))
-        par(mar = c(0,2,4,6)+0.1)
-        plot(myhc, horiz = TRUE, axes = FALSE, main = mymain)
-        dev.off()
-    }
-}
-
-
-
 #---------------------#
 # Taxonomic diversity #
 #---------------------#
-
-
 
 # Data storage for graphs
 p.ls   <- vector("list", length(pop.ordr))
 pop.wd <- vector("list", length(pop.ordr))
 
 # Color
+mylevel <- "Phylum"
 set.seed(myseed)
-mybiom.P <- mytax_glom(mybiom, "Phylum") %>% core(., detection=0, prevalence=0)
-myclr.P  <- tax_table(mybiom.P) %>% nrow() %>% rainbow_hcl() %>% sample()
-names(myclr.P) <- tax_table(mybiom.P)[,2]
 
 for (r in 1:length(pop.ordr)) {
 
-#    if (r == 1 ) {
-#        mybiom.tmp <- subset_samples(mybiom, Replicate == r)
-#        mydd.tmp <-  prune(mydd, pattern = ".2$")
-#    } else {
-#        mybiom.tmp <- mybiom
-#        mydd.tmp   <- mydd
-#    }
-
-    mybiom.tmp <- subset_samples(mybiom, Species == pop.ordr[[r]])
+    mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[[r]])
 
     # Distance matrix
-    mybiom.d <- apply(otu_table(mybiom.tmp), 1, function(x){ x <- x+1; log(x) - mean(log(x))})
+    mybiom.d <- apply(otu_table(mybiom.tmp), 1, function(x) { x <- x + 1 ; log(x) - mean(log(x)) })
     mydm     <- dist(mybiom.d, method="euclidian")
 
     # Cluster the data
@@ -645,24 +747,17 @@ for (r in 1:length(pop.ordr)) {
 
     # Generate the tree
     mydd <- as.dendrogram(myhc)
-
-    ## Reroot the tree with water samples
-    #myroot  <- prune(mydd, pattern = "Water", keep = TRUE)
-    #subtree <- prune(mydd, pattern = "Water")
-    #mydd    <- list(subtree, myroot) %>% remidpoint() %>% as.cladogram()
-
-#    mydd.tmp <-  prune(mydd, pattern = pop.ordr[[r]], keep=TRUE)
-    mydd.tmp <-  mydd
+    mydd_tmp <-  mydd
 
     # Remove non present taxa
-    mybiom.P <- mytax_glom(mybiom.tmp, "Phylum")
+    mybiom.P <- mytax_glom(mybiom.tmp, mylevel)
     mybiom.P <- core(mybiom.P, detection=0, prevalence=0)
 
     # Sample biome
     mybiom.P.s <- transform(mybiom.P, transform="compositional")
 
-    # Population biome
-    mybiom.P.p <- mysample_glom(mybiom.P, "Tissue")
+    # Organ biome
+    mybiom.P.p <- mysample_glom(mybiom.P, "Type")
     mybiom.P.p <- transform(mybiom.P.p, transform="compositional")
 
     # Vector color
@@ -672,8 +767,10 @@ for (r in 1:length(pop.ordr)) {
     p <- vector("list", 3)
 
     # Tree
-    mylabels <- as.vector(dendro_data(mydd.tmp)$labels$label)
-    p[[1]] <- ggdendrogram(mydd.tmp) +
+    # mylabels <- as.vector(dendro_data(mydd.tmp)$labels$label)
+    mylabels <- labels(mydd_tmp)
+    p[[1]] <- ggdendrogram(mydd_tmp) +
+    # p[[1]] <-  as.ggdend(mydd_tmp) %>% ggplot(.) +
         scale_x_continuous(expand = c(1/(42*2),0), labels=mylabels, breaks=1:length(mylabels)) +
         theme(axis.text.y = element_blank(), plot.margin=margin(b=-10))
 
@@ -685,82 +782,85 @@ for (r in 1:length(pop.ordr)) {
       scale_fill_manual(values = myclr) +
       scale_x_discrete(limits=mylabels) +
       # Remove x axis title and legend
-      theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks = element_blank(), legend.position="none") +
+      theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks = element_blank(), axis.line = element_blank(), legend.position="none") +
       ylab("Relative Abundance\n")
 
+    # Barplot at population level
+    mybiom.P.m <- psmelt(mybiom.P.p)
+    mybiom.P.m <- mybiom.P.m[ order(mybiom.P.m$Abundance, decreasing=TRUE), ]
 
-#    # Barplot at population level
-#    mybiom.P.m <- psmelt(mybiom.P.p)
-#    mybiom.P.m <- mybiom.P.m[ order(mybiom.P.m$Abundance, decreasing=TRUE), ]
-#
-#    ## Number of samples per population
-#    spl.count   <- count(sample_data(mybiom.P)[,2])
-#    pop.ls      <- as.vector(mybiom.P.m$Tissue) %>% sapply(., function(x) spl.count[ spl.count[,1] == x, 2])
-#    pop.wd[[r]] <- pop.ls
-#
-#    ## Correction factor to make sure to have odd number under bars
-#    if (r == 1) myftr <- 2
-#    if (r == 2) myftr <- 2
-#
-#    ## Label breaks
-#    mylabels.b <- rep("", nsamples(mybiom.tmp) / myftr)
-#
-#    #
-#    mylabels.u  <- sapply(as.vector(mylabels), function(x) sample_data(mybiom.tmp)[x, "Tissue"]) %>% unlist() %>% as.vector() %>% unique()
-#    j <- 0
-#    for (l in mylabels.u) {
-#        i <- spl.count[ spl.count[,1] == l,2]/2 / myftr
-#        mylabels.b[ j+ceiling(i) ] <- l
-#        j <- j+i*2
-#    }
-#
-#    pop.wd[[r]] <- pop.wd[[r]]/myftr
-#
-#
-#    p[[3]] <- ggplot(mybiom.P.m, aes(x = Population, y = Abundance, fill = Phylum, width=pop.wd[[!!r]]*0.98)) +   # Use of quasiquotation !!r otherwise lastest slot of the list taken for plotting
-#      geom_bar(stat = "identity") +
-#      scale_x_discrete(limits=mylabels.b, labels=mylabels.b) +
-#      scale_fill_manual(values = myclr) +
-#      # Remove x axis title and legend
-#      theme(axis.title.x = element_blank(), legend.position="none", axis.ticks = element_line(linetype=c("blank", rep("solid", length(mylabels.u))))) +     # axis.ticks needed to remove the first tick
-#      ylab("Relative Abundance\n")
+    ## Number of samples per population
+    spl.count   <- count(sample_data(mybiom.P)[,"Population"])
+    pop.ls      <- as.vector(mybiom.P.m$Type) %>% sapply(., function(x) spl.count[ spl.count[,1] == x, 2])
+    pop.wd[[r]] <- pop.ls
+
+    ## Correction factor to make sure to have odd number under bars
+    if (r == 1) myftr <- 2
+    if (r == 2) myftr <- 2
+
+    ## Label breaks
+    mylabels.b <- rep("", nsamples(mybiom.tmp) / myftr)
+
+    #
+    mylabels.u  <- sapply(as.vector(mylabels), function(x) sample_data(mybiom.tmp)[x, "Type"]) %>% unlist() %>% as.vector() %>% unique()
+    j <- 0
+    for (l in mylabels.u) {
+        i <- spl.count[ spl.count[,1] == l,2]/2 / myftr
+        mylabels.b[ j+ceiling(i) ] <- l
+        j <- j+i*2
+    }
+
+    pop.wd[[r]] <- pop.wd[[r]]/myftr
+
+    p[[3]] <- ggplot(mybiom.P.m, aes(x = Type, y = Abundance, fill = Phylum, width=pop.wd[[!!r]]*0.98)) +   # Use of quasiquotation !!r otherwise lastest slot of the list taken for plotting
+      geom_bar(stat = "identity") +
+      scale_x_discrete(limits=mylabels.b, labels=mylabels.b) +
+      scale_fill_manual(values = myclr) +
+      # Remove x axis title and legend
+      theme(axis.title.x = element_blank(), legend.position="none", axis.ticks = element_line(linetype=c("blank", rep("solid", length(mylabels.u))))) +     # axis.ticks needed to remove the first tick
+      ylab("Relative Abundance\n")
 
     pdf(NULL)
-    p.ls[[r]] <- ggarrange(plotlist=p[1:2], labels=LETTERS[1:length(p[[1:2]])], ncol=1, common.legend=T, legend="bottom", align="v")
+    p.ls[[r]] <- ggarrange(plotlist=p[1:3], labels=LETTERS[1:length(p[[1:3]])], ncol = 1, common.legend = TRUE, legend = "bottom", align = "v")
     dev.off()
 }
 
-
-pdf(paste0(graph.d,pop.ordr[[1]]," taxo-div.pdf"), width=15, height=9, useDingbats=FALSE)
+pdf(paste0(graph.d,pop.ordr[[1]]," taxo-div.pdf"), width=15, height=15, useDingbats=FALSE)
 p.ls[[1]]
 dev.off()
-
 
 pdf(paste0(graph.d,pop.ordr[[2]]," taxo-div.pdf"), width=15, height=9, useDingbats=FALSE)
 p.ls[[2]]
 dev.off()
 
-
-
 # Per Organ
-myclr.P <- tax_table(mybiom.P) %>% nrow() %>% distinctColorPalette(., seed=myseed - 223)
-names(myclr.P) <- tax_table(mybiom.P)[,2] %>% sort()
+# for (i in seq(151, 250)) {
+i <- 150
+p.ls   <- vector("list", length(pop.ordr))
+set.seed(myseed)
+mybiom.P <- mytax_glom(mybiom, mylevel) %>% core(., detection=0, prevalence=0)
+myclr.P <- tax_table(mybiom.P) %>% nrow() %>% distinctColorPalette(., seed=myseed - i)
+names(myclr.P) <- tax_table(mybiom.P)[, mylevel] %>% sort()
+
 for (r in 1:length(pop.ordr)) {
     mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[[r]])
 
     # Remove non present taxa
     mybiom.P <- mytax_glom(mybiom.tmp, "Phylum")
-    mybiom.P <- core(mybiom.P, detection=200, prevalence=0.1)
+    mybiom.P <- core(mybiom.P, detection=1, prevalence=0)
+    # mybiom.P <- core(mybiom.P, detection=200, prevalence=0.1)
 
-    # Sample biome
-    mybiom.P.s <- transform(mybiom.P, transform="compositional")
+    # # Sample biome
+    # mybiom.P.s <- transform(mybiom.P, transform="compositional")
 
-    # Population biome
+    # Organ biome
     mybiom.P.p <- mysample_glom(mybiom.P, "Type")
+
+    # Transform data to compositional
     mybiom.P.p <- transform(mybiom.P.p, transform="compositional")
 
     # Vector color
-    myclr <- myclr.P[ tax_table(mybiom.P)[,2] ]
+    myclr <- myclr.P[ tax_table(mybiom.P.p)[,2] ]
 
     # List to store graphs
     p <- vector("list", 3)
@@ -772,428 +872,294 @@ for (r in 1:length(pop.ordr)) {
     # Vector color
     myclr <- myclr.P[ tax_table(mybiom.P)[,2] ]
 
-
-    p[[3]] <- ggplot(mybiom.P.m, aes(x = Type.code, y = Abundance, fill = Phylum,)) +   # Use of quasiquotation !!r otherwise lastest slot of the list taken for plotting
-      geom_bar(stat = "identity") +
-      # scale_x_discrete(limits=mylabels.b, labels=mylabels.b) +
-      scale_fill_manual(values = myclr) +
-      # Remove x axis title and legend
-      # theme(axis.title.x = element_blank(), legend.position="none", axis.ticks = element_line(linetype=c("blank", rep("solid", length(mylabels.u))))) +     # axis.ticks needed to remove the first tick
-      ylab("Relative Abundance\n") +
-      xlab("Organs\n") +
-      theme(legend.position="bottom")
-
-    p.ls[[r]] <- p
-}
-
-pdf(paste0(graph.d,pop.ordr[[1]]," organ taxo-div.pdf"), width=8, height=5, useDingbats=FALSE)
-p.ls[[1]][[3]]
-dev.off()
-
-pdf(paste0(graph.d,pop.ordr[[2]]," organ taxo-div.pdf"), width=8, height=5, useDingbats=FALSE)
-p.ls[[2]][[3]]
-dev.off()
-
-#---------------------#
-# Taxonomic diversity #
-#---------------------#
-
-# Phyla only
-mybiom.P <- mytax_glom(mybiom, "Phylum")
-
-# Dominant OTUs
-otu.dom <- vector("list", length(nb.rep))
-for (r in nb.rep) {
-    mybiom.tmp <- subset_samples(mybiom.P, Replicate == r)
-
-    otu.dom[[r]] <- vector("list", nrow(pop.data))
-    names(otu.dom[[r]]) <- pop.data[,1]
-
-    for (p in pop.data[,1]) {
-        myind <- rownames(sample_data(mybiom.tmp))[sample_data(mybiom.tmp)$Population == p]
-        otu.dom[[r]][[p]] <- tax_table(mybiom.P)[,2][otu_table(mybiom.tmp)[,myind] %>% rowSums() %>% order() %>% tail(., 1)] %>% as.vector()
-
-        # Message
-        cat(p, " population from replicate ", r, " is dominated by ", otu.dom[[r]][[p]], ".\n", sep="")
-    }
-}
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Differentially represented phyla #
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
-# Comparison matrices
-mycomp.pop <- sample_data(mybiom)$Population %>% as.character() %>% unique() %>% combn(., 2)
-mycomp.sp  <- sample_data(mybiom)$Species %>% as.character() %>% unique() %>% combn(., 2)
-
-# Lists to store statistical results
-mybiom.tax.pop <- vector("list", length(nb.rep))
-mybiom.tax.sp  <- vector("list", length(nb.rep))
-
-# Statistical tests for each replicate
-for (r in nb.rep) {
-
-    # Subset by replicate
-    mybiom.tmp <- subset_samples(mybiom.P, Replicate == r)
-
-    ### Populations ###
-
-    # Data conversion
-    pop.dds <- phyloseq_to_deseq2(mybiom.tmp, ~ Population)
-
-    # Counts
-    pop.dds <- DESeq(pop.dds, test="Wald", fitType="parametric", parallel=TRUE)
-
-    # Lists to store results
-    res        <- vector("list", ncol(mycomp.pop))
-    names(res) <- apply(mycomp.pop, 2, function(x) paste(x[1], "vs", x[2]))
-    sig.tb     <- res
-
-    for (i in 1:ncol(mycomp.pop)) {
-        res[[i]] <- results(pop.dds, contrast=c("Population", mycomp.pop[1,i], mycomp.pop[2,i]), cooksCutoff=FALSE, parallel=TRUE)
-
-        sig.tb.tmp <- res[[i]][which(res[[i]]$padj < myalpha.lim), ]
-
-        if (nrow(sig.tb.tmp) > 0) {
-            sig.tb[[i]] <- cbind(tax_table(mybiom.tmp)[rownames(sig.tb.tmp),], sig.tb.tmp)
-        } else {
-            sig.tb[[i]] <- as.matrix(sig.tb.tmp)
-        }
-    }
-
-    # Save results
-    mybiom.tax.pop[[r]] <- list(res, sig.tb)
-
-    ### Species ###
-
-    # Data conversion
-    pop.dds <- phyloseq_to_deseq2(mybiom.tmp, ~ Species)
-
-    # Counts
-    pop.dds <- DESeq(pop.dds, test="Wald", fitType="parametric", parallel=TRUE)
-
-    # Lists to store results
-    res        <- vector("list", ncol(mycomp.sp))
-    names(res) <- apply(mycomp.sp, 2, function(x) paste(x[1], "vs", x[2]))
-    sig.tb     <- res
-
-    for (i in 1:ncol(mycomp.sp)) {
-        res[[i]] <- results(pop.dds, contrast=c("Species", mycomp.sp[1,i], mycomp.sp[2,i]), cooksCutoff=FALSE, parallel=TRUE)
-
-        sig.tb.tmp <- res[[i]][which(res[[i]]$padj < myalpha.lim), ]
-
-        if (nrow(sig.tb.tmp) > 0) {
-            sig.tb[[i]] <- cbind(tax_table(mybiom.tmp)[rownames(sig.tb.tmp),], sig.tb.tmp)
-        } else {
-            sig.tb[[i]] <- as.matrix(sig.tb.tmp)
-        }
-    }
-
-    # Save results
-    mybiom.tax.sp[[r]] <- list(res, sig.tb)
-}
-
-# Export results
-exp.d.m <- "differentially represented phyla"
-cat("\nExporting differentially represent phyla in ", exp.d.m, "...\n\n", sep="")
-## Populations
-for (i in 1:length(mybiom.tax.pop)) {
-    exp.d <- paste0(res.d, exp.d.m, "/Populations/rep_", i, "/")
-    if (! dir.exists(exp.d)) {dir.create(exp.d, recursive=TRUE)}
-
-    mynames <- names(mybiom.tax.pop[[i]][[2]])
-    for (j in 1:length(mybiom.tax.pop[[i]][[2]])) {
-        write.table(data.frame(mybiom.tax.pop[[i]][[2]][[j]]), file=paste0(exp.d, mynames[j], ".tsv"), sep="\t", quote=FALSE, row.names=FALSE)
-    }
-}
-
-## Species
-for (i in 1:length(mybiom.tax.sp)) {
-    exp.d <- paste0(res.d, exp.d.m, "/Species/rep_", i, "/")
-    if (! dir.exists(exp.d)) {dir.create(exp.d, recursive=TRUE)}
-
-    mynames <- names(mybiom.tax.sp[[i]][[2]])
-    for (j in 1:length(mybiom.tax.sp[[i]][[2]])) {
-        write.table(data.frame(mybiom.tax.sp[[i]][[2]][[j]]), file=paste0(exp.d, mynames[j], ".tsv"), sep="\t", quote=FALSE, row.names=FALSE)
-    }
-}
-
-#~~~~~~~~~#
-# Cluster #
-#~~~~~~~~~#
-
-# Cluster and bootstrap
-mybiom.P <- mytax_glom(mybiom, "Phylum") %>% core(., detection=0, prevalence=0)
-mybiom.d <- apply(otu_table(mybiom.P), 1, function(x){ x <- x+1; log(x) - mean(log(x))})
-mypvc    <- pvclust(t(mybiom.d), method.hclust="ward.D2", method.dist="euclidian", parallel=TRUE, iseed=myseed)
-
-# # Rotate water cluster ## This is probably feasible
-# myordr <- c(grep("Water", label(mypvc$hclust)[mypvc$hclust$order], invert=TRUE, value=TRUE), grep("Water", label(mypvc$hclust)[mypvc$hclust$order], value=TRUE))
-# mypvc$hclust <- dendextend::rotate(mypvc$hclust, myordr)
-
-# Bootstrap table
-mybs <- pvclust_edges(mypvc)
-
-
-#~~~~~~~~~#
-# Figures #
-#~~~~~~~~~#
-
-# Data storage for graphs
-# p.ls   <- vector("list", length(nb.rep))
-# pop.wd <- vector("list", length(nb.rep))
-
-p.ls   <- vector("list", 1)
-pop.wd <- vector("list", 1)
-
-# Color
-set.seed(myseed)
-# mybiom.P <- mytax_glom(mybiom, "Phylum") %>% core(., detection=0, prevalence=0)
-myclr.P <- tax_table(mybiom.P) %>% nrow() %>% distinctColorPalette(., seed=myseed - 223)
-names(myclr.P) <- tax_table(mybiom.P)[,2] %>% sort()
-
-# Figure for each replicate
-# for (r in nb.rep) {
-for (r in 1) {
-
-    # if (r ==1 ) {
-    #     # Remove replicates
-    #     mybiom.tmp <- subset_samples(mybiom, Replicate == r)
-    #     mypvc.tmp  <- mypvc
-    #     mypvc.tmp$hclust <- dendextend::prune(mypvc$hclust, grep(".2$", mypvc$hclust$labels, value=TRUE)) ## Remove phylogram
-
-    #     # Update bootstrap table
-    #     mybs.tmp <- mybs[ ! (grepl("\\.2$", mybs[,1]) | grepl("\\.2$", mybs[,2])), ]
-    #     mybs.tmp <- mybs.tmp[ -1, ]
-    #     mybs.tmp <- cbind(mybs.tmp, pvclust:::hc2axes(mypvc.tmp$hclust))
-
-    #     # Update pvclust object
-    #     mypvc.tmp$edges <- mypvc.tmp$edges[rownames(mybs.tmp),]
-
-    #     # Dendrogram conversion
-    #     mydd.tmp <- as.dendrogram(mypvc.tmp$hclust)
-
-    #     myhj <- 1
-    # } else {
-        mybiom.tmp <- mybiom
-        mybs.tmp   <- mybs
-        mybs.tmp   <- cbind(mybs.tmp, pvclust:::hc2axes(mypvc$hclust))
-        mydd.tmp   <- as.dendrogram(mypvc$hclust)
-        myhj       <- 0.5
-    # }
-
-    # Remove bootstrap of the first node
-    mybs.tmp <- mybs.tmp[ -nrow(mybs.tmp), ]
-
-    # Remove non present taxa
-    mybiom.P <- mytax_glom(mybiom.tmp, "Phylum")
-    mybiom.P <- core(mybiom.P, detection=0, prevalence=0)
-
-    # Sample biome
-    mybiom.P.s <- transform(mybiom.P, transform="compositional")
-
-    # Population biome
-    mybiom.P.p <- mysample_glom(mybiom.P, "Population")
-    mybiom.P.p <- transform(mybiom.P.p, transform="compositional")
-
-    # Color vector
-    myclr <- myclr.P[ tax_table(mybiom.P)[,2] ]
-
-    # List to store graphs
-    p <- vector("list", 2)
-
-    # Tree
-    mylabels <- as.vector(dendro_data(mydd.tmp)$labels$label)
-    p[[1]] <- ggdendrogram(mydd.tmp) +
-        scale_x_continuous(expand = c(1/(42*2),0), labels = mylabels, breaks = 1:length(mylabels)) +
-        annotate(geom = "text", x = mybs.tmp[,"x.axis"], y = mybs.tmp[,"y.axis"], label = signif(mybs.tmp[,"bp"],2)*100, hjust = 0.5, vjust = 1.2, size = 2, col = "grey70") +
-        theme(axis.text.y = element_blank(), plot.margin = margin(b = -10))
-
-    # Barplot at sample level
-    mybiom.P.m <- psmelt(mybiom.P.s)
-    mybiom.P.m <- mybiom.P.m[ order(mybiom.P.m$Abundance, decreasing=TRUE), ]
-    p[[2]] <- ggplot(mybiom.P.m, aes(x = Sample, y = Abundance, fill = Phylum)) +
+    p.ls[[r]] <- ggplot(mybiom.P.m, aes(x = Type.code, y = Abundance, fill = Phylum,)) +   # Use of quasiquotation !!r otherwise lastest slot of the list taken for plotting
         geom_bar(stat = "identity", color = "black", size = 0.05) +
+        # scale_x_discrete(limits=mylabels.b, labels=mylabels.b) +
         scale_fill_manual(values = myclr) +
-        scale_x_discrete(limits = mylabels) +
-        ## Update legend look (because of the bar borders
+        ## Update legend look (because of the bar borders)
         guides(fill = guide_legend(override.aes = list(colour = NA, size = 0.5))) +
-        ## Remove x axis title and legend
-        theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks = element_blank(), legend.position = "none") +
-        ylab("Relative Abundance\n")
-
-
-
-    # Saving all plots
-    p.ls[[r]] <- ggarrange(plotlist = p, labels = LETTERS[1:length(p[[1]])], ncol = 1, common.legend = TRUE, legend = "bottom", align = "v")
+        # Remove x axis title and legend
+        # theme(axis.title.x = element_blank(), legend.position="none", axis.ticks = element_line(linetype=c("blank", rep("solid", length(mylabels.u))))) +     # axis.ticks needed to remove the first tick
+        labs(title = pop.ordr[[r]], y = "Relative Abundance", x = "") +
+        theme(legend.position = "none")
 }
 
-ggsave(paste0(graph.d, "taxo-div_all.pdf"), p.ls[[1]], width=15, height=9, useDingbats=FALSE)
+# pdf(paste0(graph.d, pop.ordr[[1]], " organ taxo-div.pdf"), width = 8, height = 7, useDingbats = FALSE)
+# ggarrange(plotlist=p.ls, labels=LETTERS[1:length(p.ls)], ncol = 1, common.legend = TRUE, legend = "bottom", align = "v")
+# dev.off()
 
+pdf(NULL)
+p <- ggarrange(plotlist=p.ls, labels=LETTERS[1:length(p.ls)], ncol = 1, common.legend = TRUE, legend = "bottom", align = "v")
+invisible(dev.off())
 
-#-----------------#
-# Unassigned taxa #
-#-----------------#
+ggsave(paste0(graph.d, "Fig. 4 - Organ taxo-div ", i, ".pdf"), p, width = 8, height = 7, useDingbats = FALSE)
+# }
 
-# Proportion of unassigned
-unass.t <- tax_table(mybiom)[,1] == "Unassigned"
-unass.p <- apply(otu_table(mybiom), 2, function(x) sum(x[unass.t]) / sum(x))
-
-snail.u <- unass.p[ ! grepl("Water", names(unass.p))]
-water.u <- unass.p[ grepl("Water", names(unass.p))]
-
-cat("\nUnassigned bacteria proportion in snails:\n\t- mean:", mean(snail.u), "\n\t- range (min max):", range(snail.u), "\n")
-cat("\nUnassigned bacteria proportion in water:\n\t- mean:",  mean(water.u), "\n\t- range (min max):", range(water.u), "\n\n")
-
+# pdf(paste0(graph.d,pop.ordr[[2]]," organ taxo-div.pdf"), width=8, height=5, useDingbats=FALSE)
+# p.ls[[2]][[3]]
+# dev.off()
 
 #-----------------------------#
-# Common and specific species #
+# Shared taxa between samples #
 #-----------------------------#
 
-library("venn")
+# pop.ordr <- md[,"Species"] %>% levels
+rm.water <- FALSE
 
-ct.ls <- vector("list", length(pop.ordr))
-p.ls  <- vector("list", length(pop.ordr))
+# # Test several thresholding (minimal count in sample type, minimal prevalance))
+# tsh.ls <- list(c(0, 0), c(100, 0.2))
+tsh.ls <- c(0, 4)
 
+ct.ls <- vector("list", length(tsh.ls))
+low.ls <- vector("list", length(tsh.ls))
 
-for (s in pop.ordr) {
-    myidx <- match(s, pop.ordr)
+for (i in 1:length(tsh.ls)) {
 
-    md.tmp <- md[ md[,"Species"] == s, ]
-    myotu.tmp <- otu_table(mybiom)[,rownames(md.tmp)]
-    # Remove irrelevant ASV
-    myotu.tmp <- myotu.tmp[ rowSums(myotu.tmp) > 0, ]
+    ct.ls[[i]]  <- vector("list", length(pop.ordr)) %>% setNames(., pop.ordr)
+    low.ls[[i]] <- vector("list", length(pop.ordr)) %>% setNames(., pop.ordr)
 
-    myts.tmp <- ts.ordr[ ! grepl("T.*", ts.ordr[,1]) ,]
-
-    myclr <- pop.clr[ ! grepl("T.*", ts.ordr[,1]) ]
-
-    # Threshold to select minimal count in tissues
+    # Minimal count in sample type
+    # mytsh <- tsh.ls[[i]][[1]]
     mytsh <- 0
 
     # Invert prevalence of the select minimal count [0-1] (0 = all, 1 = none)
+    # mypv <- tsh.ls[[i]][[2]]
     mypv <- 0
 
-    a <- sapply(myts.tmp[,1], function(x) myotu.tmp[,rownames(md.tmp[ md.tmp[,"Tissue"] == x,])] )
-#    b <- lapply(a, function(x) rowSums(x) > 0)
-    b <- lapply(a, function(x) rowSums(x > mytsh) > ncol(x)*mypv )
-    c <- data.frame(sapply(b,c))
+    # Minimum number of intersection
+    is.tsh <- tsh.ls[i]
 
-    # Remove irrelevant ASV (after tissue filtration)
-    c <- c[ rowSums(c) > 0, ]
+    for (s in pop.ordr) {
+        md.tmp <- md[ md[,"Population"] == s, ]
+        myotu.tmp <- otu_table(mybiom)[,rownames(md.tmp)]
+        org.data.tmp <- org.data
 
-    # Rename colums (Not a good idea if image too small)
-#    for (i in 1:ncol(c)) { colnames(c)[i] <- ts.ordr[ ts.ordr[,1] == colnames(c)[i],2]}
+        # Remove irrelevant ASV
+        myotu.tmp <- myotu.tmp[ rowSums(myotu.tmp) > 0, ]
 
-    ct.ls[[myidx]] <- nrow(c)
+        # Remove water
+        if (rm.water) { org.data.tmp <- org.data.tmp[ ! grepl("T.*", org.data.tmp[,1]) ,] }
 
+        # myclr <- pop.clr[ ! grepl("T.*", org.data.tmp[,1]) ]
 
-#    # Common species between tissues and whole snail
-#    c.com <- c[ c[,"W"], ]
-#
-#    # Specific species to tissues
-#    c.spec <- c[ ! c[,"W"], ]
-#
-##    c.com.ct  <- signif( colSums(c.com) / nrow(c.com) , 2)
-##    c.spec.ct <- signif( colSums(c.spec) / nrow(c.spec) , 2)
-##    c.com.ct  <- signif( c(colSums(c.com), Total=nrow(c.com)) , 2)
-##    c.spec.ct <- signif( c(colSums(c.spec), Total=nrow(c.spec)) , 2)
-##    ct.ls[[myidx]] <- list(c.com.ct, c.spec.ct)
-#    ct.ls[[myidx]] <- data.frame( Common=signif( c(colSums(c.com), Total=nrow(c.com)) , 2),
-#                                  Specific=signif( c(colSums(c.spec), Total=nrow(c.spec)) , 2),
-#                                  Tissue=c(colnames(c.com), "Total"))
-#
-#    ct.ls[[myidx]][,3] <- factor(ct.ls[[myidx]][,3], c(myts.tmp[,1], "Total"))
-#
-#    p[[1]] <- ggplot(ct.ls[[myidx]], aes(x=Tissue, y=Specific)) +
-#            geom_bar(stat="identity") + ylab("Number of ASV observed")
-#
-#    p[[2]] <- ggplot(ct.ls[[myidx]], aes(x=Tissue, y=Common)) +
-#            geom_bar(stat="identity") + ylab("Number of ASV observed")
-#
-#    pdf(paste0(graph.d,s," ASV specific whole snail.pdf"), useDingbats=FALSE)
-#    print(p[[1]])
-#    dev.off()
-#
-#    pdf(paste0(graph.d,s," ASV common whole snail.pdf"), useDingbats=FALSE)
-#    print(p[[2]])
-#    dev.off()
+        # Filter data per sample type
+        otu_type <- sapply(org.data.tmp[,1], function(x) myotu.tmp[,rownames(md.tmp[ md.tmp[,"Type.code"] == x,])] )
+        otu_type <- lapply(otu_type, function(x) rowSums(x > mytsh) > ncol(x) * mypv )
+        otu_type <- sapply(otu_type, c) %>% apply(., 2, function(x) as.numeric(x) %>% setNames(., names(x)))
 
+        # Remove irrelevant ASV (after sample type filtering)
+        otu_type <- otu_type[ rowSums(otu_type) > 0, ]
 
-    pdf(paste0(graph.d,s," ASV venn - tsh ",mytsh," pv ",mypv,".pdf"), height=2.5, width=2.5, useDingbats=FALSE)
-    venn(c, zcolor=myclr, box=FALSE)
-    dev.off()
-}
+        # Filter on minimal intersection
+        # otu_type <- otu_type[ rowSums(otu_type) > is.tsh, ]
+        mycomb     <- apply(otu_type, 1, paste0, collapse = "")
+        mycomb_sel <- which(table(mycomb) > is.tsh) %>% names()
+        otu_sel    <- mycomb[mycomb %in% mycomb_sel] %>% names()
+        otu_type   <- otu_type[otu_sel, ]
 
-
-
-
-#---------#
-# Heatmap #
-#---------#
-
-p.ls <- vector("list", length(nb.rep))
-for (r in nb.rep) {
-
-    if (r ==1 ) {
-        mybiom.tmp <- subset_samples(mybiom, Replicate == r)
-    } else {
-        mybiom.tmp <- mybiom
+        # Store final data
+        ct.ls[[i]][[s]]  <- otu_type %>% as.data.frame()
+        low.ls[[i]][[s]] <- table(mycomb) > is.tsh
     }
-
-    mygrp <- split(get_variable(mybiom.tmp), get_variable(mybiom.tmp, "Population")) %>% lapply(., rownames)
-
-    mygrp.otu <- lapply(mygrp, function(x) otu_table(mybiom.tmp)[,x] %>% rowSums())
-
-    # Top 50 OTU from each group
-    mygrp.otu.s <- lapply(mygrp.otu, function(x) sort(x, decreasing=TRUE) %>% names() %>% head(., 50))
-
-    mygrp.otu.uniq <- mygrp.otu.s %>% unlist() %>% unique()
-
-    # Prune table
-    mybiom.o  <- prune_taxa(mygrp.otu.uniq, mybiom.tmp)
-
-    # Identify interval to add blank bars
-    spl.count <- count(sample_data(mybiom.o)[,2])
-    myint     <- cumsum(spl.count[-nrow(spl.count),2])
-
-    # Plot
-    p.ls[[r]] <- plot_heatmap(mybiom.o, method=NULL, distance="bray", sample.order=unlist(mygrp), taxa.order=mygrp.otu.uniq) +
-                    geom_vline(xintercept = myint+0.5, size = 2, color="white") +
-                    labs(y="ASV") +
-                    theme(axis.ticks.y=element_blank(), axis.line=element_blank(), axis.text.y=element_blank())
 }
 
-pdf(paste0(graph.d,"taxo-div_hm.pdf"), width=10, height=20, useDingbats=FALSE)
-p.ls[[1]]
+for (i in 1:length(tsh.ls)) {
+
+    # Threshold values
+    # mytsh <- tsh.ls[[i]][[1]]
+    # mypv  <- tsh.ls[[i]][[2]]
+    mytsh <- 0
+    mypv  <- 0
+
+    myh <- 5
+    myw <- 10
+    if (i == 1) myw <- 20
+
+    for (s in pop.ordr) {
+        pdf(paste0(graph.d, "Fig.5 - ", i, s," ASV upset test - tsh ", mytsh, " pv ", mypv, ".pdf"), height = myh, width = myw, useDingbats = FALSE)
+        otu_type_fn <- ct.ls[[i]][[s]]
+        clr <- pop.data[ pop.data[, 1] == s, 2]
+        ups <- upset(otu_type_fn, sets = colnames(otu_type_fn), nintersects = NA, main.bar.color = clr, mainbar.y.label = "ASVs per intersection", sets.x.label = "ASVs per sample type", keep.order = TRUE)
+        print(ups)
+        grid.text(s, x = 0.65, y = 0.95, gp = gpar(fontsize = 20))
+        dev.off()
+    }
+}
+
+# Ubiquitous ASVs (snail + water) shared between species
+a <- which((ct.ls[[1]][[1]] %>% rowSums(.)) == 8) %>% names()
+b <- which((ct.ls[[1]][[2]] %>% rowSums(.)) == 8) %>% names()
+
+a %in% b
+
+# Poportion of ASV shared per species
+lapply(ct.ls[[1]], function(x) nrow(x[rowSums(x) > 1, ]) / nrow(x))
+
+# Poportion of ASV shared per sample type
+lapply(ct.ls[[1]], function(a) sapply(1:8, function(x) { a1 <- a[ a[,x] == 1, ] ; nrow(a1[ rowSums(a1) > 1, ]) / nrow(a1)}) %>% setNames(., colnames(a))) %>% melt()
+
+# Proportion of shared ASVs between H and O|W
+# lapply(ct.ls[[1]], function(x) { a <- (x[, "H"]  == 1 & (x[, "W"]  == 1 | x[, "H"]  == 1 & x[, "O"]  == 1)) ; sum(a)/length(a[rowSums(x) > 1]) })
+spl <- "H"
+lapply(org.data[org.data[,1] != spl, 1], function(y) sapply(ct.ls[[1]], function(x) { a <- (x[, spl]  == 1 & x[, y]  == 1) ; sum(a)/length(a[rowSums(x) > 1]) })) %>% setNames(., paste(spl, "and", org.data[org.data[,1] != spl, 1]))
+
+# Proportion of shared ASVs between whole snail and another sample type
+spl <- "W"
+lapply(org.data[org.data[,1] != spl, 1], function(y) sapply(ct.ls[[1]], function(x) { a <- (x[, spl]  == 1 & x[, y]  == 1) & rowSums(x[, setdiff(names(x), c(spl, y))])  == 0 ; sum(a)/length(a[rowSums(x) > 1]) })) %>% setNames(., paste(spl, "and", org.data[org.data[,1] != spl, 1]))
+
+# Proportion of shared ASVs between TK|TY and H
+# lapply(ct.ls[[1]], function(x) { a <- (x[, "TK"]  == 1 | x[, "TY"]  == 1) & (x[, "H"]  == 1 | x[, "O"]  == 1 | x[, "W"]  == 1) ; sum(a)/length(a[rowSums(x) > 1]) })
+lapply(ct.ls[[1]], function(x) { a <- (x[, "TK"]  == 1 | x[, "TY"]  == 1) & (x[, "H"]  == 1) ; sum(a)/length(a[rowSums(x) > 1]) })
+
+# Proportion of shared ASVs between TK|TY and G|S
+# lapply(ct.ls[[1]], function(x) { a <- (x[, "TK"]  == 1 | x[, "TY"]  == 1) & (x[, "G"]  == 1 | x[, "S"] == 1) ; sum(a)/length(a[rowSums(x) > 1]) })
+
+lapply(org.data[, 1], function(y) lapply(ct.ls[[1]], function(x) { a <- (x[, "TK"]  == 1 | x[, "TY"]  == 1) ; b <- rowSums(x[! a & x[, y]  == 1,]) >= 1 ; sum(b) / sum(!a) })) %>% setNames(., org.data[, 1])
+
+# # Proportion of ASV found only in snails (amoung all ASVs)
+# a <- ct.ls[[1]][[2]]
+# sum(! rowSums(a[, grepl("^T", colnames(a))]) > 0) / nrow(a)
+lapply(ct.ls[[1]], function(x) sum(! rowSums(x[, grepl("^T", colnames(x))]) > 0) / nrow(x))
+
+# Proportion of shared ASV found only in snails (amoung all shared ASVs)
+lapply(ct.ls[[1]], function(x) {x1 <- x[rowSums(x) > 1, ] ; sum(! rowSums(x1[, grepl("^T", colnames(x1))]) > 0) / nrow(x1) })
+
+## Proportion of ubiquitous shared ASVs across snail sample types
+# aT <- a[, ! grepl("^T", colnames(a))]
+lapply(ct.ls[[1]], function(x) {x <- x[rowSums(x) > 1, ]
+                                xT <- x[! rowSums(x[, grepl("^T", colnames(x))]) > 0,  ! grepl("^T", colnames(x))]
+                                sum(rowSums(xT) == ncol(xT)) / nrow(xT) })
+
+## Proportion of ubiquitous shared ASVs across all sample types
+lapply(ct.ls[[1]], function(x) {sum(rowSums(x) == ncol(x)) / nrow(x[rowSums(x) > 1,]) })
+
+# Proportion of shared ASV found only in snails (amoung all shared ASVs)
+lapply(ct.ls[[1]], function(x) {x1 <- x[rowSums(x) > 1, ] ; sum(rowSums(x1) > 4) / nrow(x1) })
+
+# ## Proportion of shared ASVs low sharing
+# for (i in 1:length(ct.ls)) {
+#     a <- ct.ls[[1]][[i]]
+#     b <- ct.ls[[2]][[i]]
+
+#     a <- a[rowSums(a) > 1,]
+#     b <- b[rowSums(b) > 1,]
+
+#     print(1 - nrow(b) / nrow(a))
+# }
+
+## Proportion of intersection with low sharing
+for (i in 2:length(tsh.ls)) {
+    for (s in pop.ordr) {
+        mylow <- low.ls[[i]][[s]]
+        print(1 - sum(mylow) / length(mylow))
+    }
+}
+
+## Proportion of sample types associated with intersection with low ASVs
+lapply(low.ls[[2]], function(x) {names(x)[x] %>% sapply(., strsplit, "") %>% do.call("rbind", .) %>% apply(., 2, as.numeric) %>% colSums() %>% setNames(., org.data[,1])} )
+
+# pairwise sharing
+pw.ls <- vector("list", length(pop.ordr)) %>% setNames(., pop.ordr)
+for (s in pop.ordr) {
+    x <- ct.ls[[1]][[s]]
+    cb <- combn(org.ordr, 2)
+    # mydf <- data.frame(a = cb[1,], b = cb[2,], c = rep(NA, ncol(cb)))
+    mydf <- matrix(NA, nrow = length(org.ordr), ncol = length(org.ordr))
+    colnames(mydf) <- org.ordr
+    # rownames(mydf) <- rev(org.ordr)
+    rownames(mydf) <- org.ordr
+    for (n in 1:ncol(cb)) {
+        a <- (x[, cb[1,n]]  == 1 & x[, cb[2,n]]  == 1)
+        mydf[cb[1,n], cb[2,n]] <- (sum(a) / length(a[rowSums(x) > 1])) %>% round(., digit = 2)
+    }
+    pw.ls[[s]] <- mydf
+}
+
+a <- pw.ls[[1]]
+a[lower.tri(a)] <- (pw.ls[[2]] %>% t())[lower.tri(a)]
+
+# P-value matrix for each relevant index
+# p <- vector("list", nrow(myidx))
+# mybreaks <- c(10^(seq(log10(min(mymat, na.rm=T)), log10(0.05), length.out=4)), 1)
+pdf(NULL)
+p <- plotPvalues(a, border.col="black", pval.col="black", font.size=3, scientific = FALSE) +
+    xlab("") + ylab("") +
+    # scale_fill_gradient2(low = "red", mid = "yellow", high = "white", limits = c(NA, 0.05), guide = "colorbar", na.value = "transparent", trans = "log10", breaks = mybreaks, label = format(mybreaks, digit = 2, scientific = TRUE)) +
+    scale_fill_gradient2(low = "white", mid = "yellow", high = "red", limits = c(0.2, 0.6), guide = "colorbar", na.value = "transparent") +
+    guides(fill = guide_colourbar(barwidth = 9, title.vjust = 0.75)) +
+    theme(axis.line = element_blank(), axis.ticks = element_blank(), legend.position = "none", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) #+
+    # ggtitle(myidx[i, 2])
+invisible(dev.off())
+ggsave(paste0(graph.d, "Supp. Fig. 4 - pairwise shared ASV.pdf"), p, width = 10, height = 10, useDingbats = FALSE)
+
+#~~~~~~~~~~
+# By organ
+
+rm.water <- FALSE
+
+org.ordr <- org.data[, 1]
+
+ct.ls <- vector("list", length(org.ordr)) %>% setNames(., org.ordr)
+
+for (s in org.ordr) {
+    md.tmp <- md[ md[,"Type.code"] == s, ]
+    myotu.tmp <- otu_table(mybiom)[,rownames(md.tmp)]
+    org.data.tmp <- org.data
+
+    # Remove irrelevant ASV
+    myotu.tmp <- myotu.tmp[ rowSums(myotu.tmp) > 0, ]
+
+    # Remove water
+    if (rm.water) { org.data.tmp <- org.data.tmp[ ! grepl("T.*", org.data.tmp[,1]) ,] }
+
+    # myclr <- pop.clr[ ! grepl("T.*", org.data.tmp[,1]) ]
+
+    # Filter data per sample type
+    mytsh <- 0
+    mypv  <- 0
+    otu_type <- sapply(pop.ordr, function(x) myotu.tmp[,rownames(md.tmp[ md.tmp[,"Population"] == x,])], simplify = FALSE )
+    otu_type <- lapply(otu_type, function(x) rowSums(x > mytsh) > ncol(x) * mypv )
+    otu_type <- sapply(otu_type, c) %>% apply(., 2, function(x) as.numeric(x) %>% setNames(., names(x)))
+
+    # Remove irrelevant ASV (after sample type filtering)
+    otu_type <- otu_type[ rowSums(otu_type) > 0, ]
+
+    # Filter on minimal intersection
+    mycomb     <- apply(otu_type, 1, paste0, collapse = "")
+    mycomb_sel <- which(table(mycomb) > is.tsh) %>% names()
+    otu_sel    <- mycomb[mycomb %in% mycomb_sel] %>% names()
+    otu_type   <- otu_type[otu_sel, ]
+
+    # Store final data
+    ct.ls[[s]] <- otu_type %>% as.data.frame()
+}
+
+p.ls <- vector("list", length(org.ordr)) %>% setNames(., org.ordr)
+
+myw <- 2.75 * length(org.ordr) / 2
+myh <- 2.75 * length(org.ordr) / 4
+
+myclr <- pop.data[,2] %>% c(., midcol(.[1], .[2]))
+
+for (s in org.ordr) {
+    otu_type_fn <- ct.ls[[s]]
+
+    z <- apply(otu_type_fn, 1, function(x) {paste(names(x)[as.logical(x)], collapse="-")}) %>% table() %>% as.data.frame()
+    z[, 1] %<>% levels() %>% {list(grep("-", ., value = TRUE, invert = TRUE), grep("-", ., value = TRUE))} %>% unlist() %>% factor(z[, 1], levels = .)
+
+    p.ls[[s]] <- ggplot(data = z, aes(x = ., y = Freq)) +
+                    geom_bar(stat = "identity", fill = myclr) +
+                    geom_text(aes(label = Freq), vjust = -0.3, color = myclr[match(z[,1], levels(z[,1]))]) +
+                    labs(x = "", y = "ASVs per intersection", title = org.data[org.data[,1] == s, 2]) +
+                    coord_cartesian(clip = 'off') +
+                    theme(plot.title = element_text(hjust = 0.5))
+}
+
+# Panel with replicate
+pdf(paste0(graph.d, "1 ASV upset by spl_tp - test.pdf"), width = myw, height = myh)
+p <- ggarrange(plotlist = p.ls, nrow = length(p.ls) / 4, ncol = length(p.ls) / 2) #, common.legend=TRUE, legend="bottom", labels=LETTERS[1:2])
+print(p)
 dev.off()
-
-
-pdf(paste0(graph.d,"taxo-div_hm_all.pdf"), width=20, height=20, useDingbats=FALSE)
-p.ls[[2]]
-dev.off()
-
-
-## Top 50 OTU from each group
-#mygrp.otu.s <- lapply(mygrp.otu, function(x) sort(x[x > 100]) %>% names() %>% head(., 50))
-#
-#mygrp.otu.uniq <- mygrp.otu.s %>% unlist() %>% unique()
-#
-#d <- prune_taxa(mygrp.otu.uniq, mybiom)
-#
-#pdf("heatmap_rare.pdf", width=10, height=20)
-#plot_heatmap(d, method=NULL, distance="bray", sample.order=unlist(mygrp), taxa.order=mygrp.otu.uniq)
-#dev.off()
-
-
-
-
-# Close the registered backend cluster
-stopCluster(cl)
-rm(cl)
-registerDoSEQ()
-
-
 
 #=========#
 # Figures #
@@ -1201,138 +1167,3 @@ registerDoSEQ()
 
 if (! dir.exists(graph.dir) ) { dir.create(graph.dir, recursive=TRUE) }
 
-#clr <- rainbow(unique(mypop[,2]) %>% length())
-clr <- colorspace::rainbow_hcl(unique(mypop[,2]) %>% length())
-names(clr) <- unique(mypop[,2])
-
-#pdf(paste0(graph.dir,"Nb_OTU.pdf"), width=4, height=3)
-#    par(mar=c(3,2,0,0)+0.1)
-#    boxplot(mypop.otu[,3] ~ mypop.otu[,2], ylab="Number of OTUs", xlab="Popuations")
-#dev.off()
-#
-#
-#pdf(paste0(graph.dir,"Phyla_by_pop.pdf"), width=5)
-#    plot_composition(mybiom.core.ss.P.t, average_by = "Population", sample.sort=sort(sample_names(mybiom.core.ss.P.t))) +
-#    scale_fill_discrete(name="Phylum", breaks=taxa_names(mybiom.core.ss.P.t), labels=( tax_table(mybiom.core.ss.P.t)[,2] %>% strsplit(., "_") %>% lapply(., function(x) rev(x)[1]) %>% unlist() ) )
-#dev.off()
-#
-##color <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
-##color <- grDevices::terrain.colors(length(taxa_names(mybiom.core.ss.P.t)))
-##color <- cm.colors(length(taxa_names(mybiom.core.ss.P.t)))
-#
-#pdf(paste0(graph.dir,"Phyla_by_samp.pdf"), width=15)
-#    plot_composition(mybiom.core.ss.P.t, sample.sort=sort(sample_names(mybiom.core.ss.P.t))) +
-#    scale_fill_discrete(name="Phylum", breaks=taxa_names(mybiom.core.ss.P.t), labels=( tax_table(mybiom.core.ss.P.t)[,2] %>% strsplit(., "_") %>% lapply(., function(x) rev(x)[1]) %>% unlist() ))
-##scale_fill_manual(values=color, name="Phylum", breaks=taxa_names(mybiom.core.ss.P.t), labels=( tax_table(mybiom.core.ss.P.t)[,2] %>% strsplit(., "_") %>% lapply(., function(x) rev(x)[1]) %>% unlist() ) )
-#dev.off()
-#
-#pdf(paste0(graph.dir,"Phyla_rep.pdf"), width=5)
-#    plot_composition(mybiom.core.ss.P.t.sp, sample.sort=sort(sample_names(mybiom.core.ss.P.t.sp))) +
-#    scale_fill_discrete(name="Phylum", breaks=taxa_names(mybiom.core.ss.P.t.sp), labels=( tax_table(mybiom.core.ss.P.t.sp)[,2] %>% strsplit(., "_") %>% lapply(., function(x) rev(x)[1]) %>% unlist() ))
-##scale_fill_manual(values=color, name="Phylum", breaks=taxa_names(mybiom.core.ss.P.t), labels=( tax_table(mybiom.core.ss.P.t)[,2] %>% strsplit(., "_") %>% lapply(., function(x) rev(x)[1]) %>% unlist() ) )
-#dev.off()
-
-
-#pdf(paste0(graph.dir,"Fig 2.pdf"), width=7.5, height=3.5)
-pdf(paste0(graph.dir,"Fig 3.pdf"), width=6.5, height=3.5, useDingbats=FALSE)
-
-mycex <- 0.6
-
-#par(cex.axis=0.55, cex.lab=0.75)
-par(cex.axis=mycex, cex.lab=mycex*1.2)
-par(mar=c(3,3,1,0)+0.1)
-
-layout(matrix(1:4, ncol=2, byrow=TRUE))
-
-#------#
-# OTUs #
-#------#
-
-# Graph
-b <- boxplot(mypop.otu[,3] ~ mypop.otu[,2], ylab="", outline=FALSE, frame=FALSE, lwd=0.5, axes=FALSE, col=clr[order(names(clr))])
-
-# x axis
-axis(1, at=1:length(b$n), labels=FALSE, lwd=0.5)
-text(1:length(b$n), par("usr")[3] - diff(par("yaxp")[1:2])*0.1, labels=b$names, srt=45, pos=1, cex=mycex, xpd=TRUE)
-
-# y axis
-title(ylab="Observed OTUs", line=2)
-axis(2, lwd=0.5)
-
-# Annotation
-myshift <- par("pin")[2] / diff(par("usr")[3:4]) * (diff(par("yaxp")[1:2]) / par("yaxp")[3]) * 1000
-text(1:length(b$n), b$stats[5,]+myshift, otu.letters, xpd=TRUE, cex=mycex)
-
-#------#
-# qPCR #
-#------#
-
-# Graph
-b <- boxplot(qpcr[,2] ~ qpcr[,3], ylab="", outline=FALSE, frame=FALSE, lwd=0.5, axes=FALSE, col=clr[order(names(clr))])
-
-# x axis
-axis(1, at=1:length(b$n), labels=FALSE, lwd=0.5)
-text(1:length(b$n), par("usr")[3] - diff(par("yaxp")[1:2])*0.1, labels=b$names, srt=45, pos=1, cex=mycex, xpd=TRUE)
-
-# y axis
-axis(2, lwd=0.5)
-title(ylab=expression("Number of 16S per "* mu * "L"), line=2)
-#title(ylab=("Number of 16S per µL"), line=2)
-
-#-------------------#
-# Rarefaction curve #
-#-------------------#
-
-table.rc <- table.rc[ table.rc[,"Depth"] <= 80000, ]
-plot(0, ylim=c(0, max(table.rc[,3])), xlim=c(0, max(table.rc[,1])), axes=FALSE, bty="n", type="n", xlab="", ylab="")
-#plot(0, ylim=c(0, max(table.rc[table.rc[,"Depth"] <= 80000,3])), xlim=c(0, 8e4), axes=FALSE, bty="n", type="n", xlab="", ylab="")
-title(xlab="Number of sequences sampled", ylab="Observed OTUs", line=2)
-axis(1, lwd=0.5)
-axis(2, lwd=0.5)
-for (p in unique(mypop[,2])) {
-    b.tmp <- table.rc[ table.rc[,2] == p, ]
-    plotCI(b.tmp[,1], b.tmp[,3], ui=b.tmp[,3]+b.tmp[,4], li=b.tmp[,3]-b.tmp[,4], pch=19, col=clr[match(p,unique(mypop[,2]))], add=TRUE)
-#   fit <- lm(V1 ~ poly(Depth,2,raw=TRUE), b.tmp)
-#   fit <- loess(V1 ~ Depth, b.tmp)
-   fit <- lm(V1 ~ log10(Depth), b.tmp)
-#    fit <- gam(V1 ~ s(Depth,k=nrow(b.tmp)), data=b.tmp)
-    xx  <- seq(1, max(table.rc[,1]), (max(table.rc[,1]) - 1)/1000)#length=nrow(b.tmp))
-    pred <- predict(fit, data.frame(Depth=xx), interval="confidence")
-#    pred <- predict(fit, data.frame(Depth=xx))
-    lines(xx, pred[,1], col=clr[match(p,unique(mypop[,2]))])
-#    polygon(c(xx, rev(xx)), c(pred[, 2], rev(pred[, 3])), col=gsub("#","#80",clr[match(p,unique(mypop[,2]))]), border=NA)
-}
-#legend("topleft", legend=unique(mypop[,2]) %>% sort, col=clr,lty=1, lwd=0.5, bty="n", cex=0.5)
-
-
-#------#
-# PCoA #
-#------#
-
-# How to integrate ggplot in layout: https://stackoverflow.com/a/14125565
-
-plot.new()
-vps <- baseViewports()
-pushViewport(vps$figure) ##   I am in the space of the autocorrelation plot
-vp1 <-plotViewport(c(0,0,0,0)) ## create new vp with margins, you play with this values
-
-#pdf(paste0(graph.dir,"PCoA_2.pdf"), width=3.5, height=3.5)
-#    p <- plot_ordination(mb, e, color = "Population")$data
-#    p <- p[!grepl("Ba|water",p[,"Species"]),]
-#    mycol <- sapply(as.vector(p[,6]), function(x) clr[match(x, unique(mypop[,2]))])
-#    plot(p[,2] ~ p[,1], xlab=paste0("Axis 1 (",round(e$value[1,2]*100, 2), "%)"), ylab=paste0("Axis 2 (",round(e$value[2,2]*100, 2), "%)"), col=mycol, pch=19)
-p <- plot_ordination(mb, e, color = "Population") +
-        scale_color_manual(values=clr[order(names(clr))]) +
-        stat_ellipse(type = "norm") + theme_bw() +
-        theme(axis.text = element_text(size = rel(0.45))) +
-        theme(axis.title = element_text(size = rel(0.6))) +
-        theme(legend.position="none")
-p$data <- p$data[!grepl("Ba|water",p$data[,"Species"]),]
-#p <- p + stat_ellipse(type = "norm") + theme_bw()
-#print(p + theme(legend.position="none"), vp=vp1)
-print(p, vp=vp1)
-
-dev.off()
-
-# Clean tmp file
-if (file.exists("Rplots.pdf")) { unlink("Rplots.pdf") }
