@@ -51,32 +51,14 @@ setwd(file.path(getwd(), "scripts"))
 # # Qiime file
 # asv.f  <- "../results/1-qiime/table.qza"
 
+# Folders, sample type info, and graphic options
+source("microbiome_module.R")
+
 # qPCR file
 qpcr.f <- "../data/qPCR/snail_microbiome_qPCR_data.tsv"
 
 # # Picrust file
 # picrust.f <- "../results/2-picrust2/marker_predicted_and_nsti.tsv.gz"
-
-# Population order and color
-pop.data <- matrix(c("Ba",     "#ffac40",
-                     "BgBS90", "#87d687"), byrow=TRUE, ncol=2)
-
-# Tissue order
-org.data <- matrix(c(
-                "H",  "Hemolymph",
-                "S",  "Stomach",
-                "G",  "Gut",
-                "L",  "Hepatopancreas",
-                "O",  "Ovotestis",
-                "W",  "Whole snail",
-                "TY", "Water tray",
-                "TK", "Water tank"), ncol=2, byrow=TRUE)
-
-# Graph folder
-graph.d <- "../graphs/"
-
-# GGplot options
-theme_set(theme_classic())
 
 # Volumes
 elu.vol <- 50
@@ -164,7 +146,7 @@ for (i in pop.data[, 1]) {
     mymat <- matrix(NA, ncol = length(mytype_spl), nrow = length(mytype_spl))
     rownames(mymat) <- mytype_spl
     colnames(mymat) <- mytype_spl
-    
+
     myspl_tmp <- my16S_spl[[i]]
 
     for (j in 1:ncol(mycomb)) {
@@ -225,7 +207,7 @@ print(j)
 
 # Raw 16S copy number between populations
 cat("Raw 16S copy number:\n\n")
-my16S_pop <- split(my16S, my16S[, "Population"]) 
+my16S_pop <- split(my16S, my16S[, "Population"])
 my16S_spl <- lapply(my16S_pop, function(x) split(x, x[, "Type.code"]))
 lapply(my16S_spl, function(x) {sapply(x, function(y) {z <- y[, "Quantity_mean"]; z <- z[z < 1e5];  c(Mean = mean(z), SE = sd(z)/length(z), Min = min(z), Max = max(z), N = length(z))}) }) %>% print()
 
@@ -397,7 +379,7 @@ p.ls[[1]] <- ggplot(mydata, aes(x = Population, y = V2, fill = Population)) +
 
 # Normalized data
 p.ls[[2]] <- ggplot(mydata, aes(x = Population, y = V4, fill = Population)) +
-        geom_boxplot(outlier.shape=NA) + xlab("") + ylab("Estimated number of bacteria per µL") + 
+        geom_boxplot(outlier.shape=NA) + xlab("") + ylab("Estimated number of bacteria per µL") +
         scale_y_continuous(limits = c(0, ylim)) +
         scale_fill_manual(values = pop.data[,2]) +
         stat_summary(geom = 'text', label = asv.d.letters, fun.y = q, vjust = -1) +
@@ -405,7 +387,7 @@ p.ls[[2]] <- ggplot(mydata, aes(x = Population, y = V4, fill = Population)) +
 
 # Correlation
 p.ls[[3]] <- ggplot(mydata, aes(x = V4, y = asv)) +
-        geom_point(aes(color = Population)) + 
+        geom_point(aes(color = Population)) +
         stat_smooth(method = lm, se = FALSE) +
         xlab("Bacterial number") + ylab("Number of observed ASVs") +
         scale_color_manual(values = pop.data[,2]) +

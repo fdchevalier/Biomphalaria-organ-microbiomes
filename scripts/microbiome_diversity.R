@@ -73,28 +73,8 @@ md.f   <- "../data/sample-metadata.tsv"
 # Contaminant file
 blast.f <- "../results/1-qiime/rep-seqs_unassigned/unassigned.blastn.tsv"
 
-# Population order and color
-pop.data <- matrix(c("Ba",     "#ffac40",
-                     "BgBS90", "#87d687"), byrow=TRUE, ncol=2)
-
-# Tissue order
-org.data <- matrix(c(
-                "H",  "Hemolymph",
-                "S",  "Stomach",
-                "G",  "Gut",
-                "L",  "Hepatopancreas",
-                "O",  "Ovotestis",
-                "W",  "Whole snail",
-                "TY", "Water tray",
-                "TK", "Water tank"), ncol=2, byrow=TRUE)
-
-org.tp <- org.data[ grep("TY|TK", org.data[,1], invert = TRUE), ]
-
-# Graph output directory
-graph.d <- "../graphs/"
-
-# GGplot options
-theme_set(theme_classic())
+# Folders, sample type info, and graphic options
+source("microbiome_module.R")
 
 # Seed for reproducibility
 myseed <- 26017
