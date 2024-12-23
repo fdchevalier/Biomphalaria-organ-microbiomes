@@ -1,8 +1,9 @@
 #!/usr/bin/env Rscript
 # Title: microbiome_module.R
-# Version: 0.0
+# Version: 0.1
 # Author: Frédéric CHEVALIER <fcheval@txbiomed.org>
 # Created in: 2024-05-23
+# Modified in: 2024-12-22
 
 
 
@@ -16,15 +17,15 @@ pop.data <- matrix(c("Ba",     "#ffac40",
 
 # Sample type order
 org.data <- matrix(c(
-                "H",  "Hemolymph",      "Hm",
-                "S",  "Stomach",        "S",
-                "G",  "Gut",            "G",
-                "L",  "Hepatopancreas", "Hp",
-                "O",  "Ovotestis",      "O",
-                "W",  "Whole snail",    "W",
-                "TY", "Water tray",     "Ty",
-                "TK", "Water tank",     "Tk"
-                ), ncol = 3, byrow = TRUE)
+                "H",  "Hemolymph",      "Hm", "#da2b2b",
+                "S",  "Stomach",        "S",  "#7cae00",
+                "G",  "Gut",            "G",  "#00be67",
+                "L",  "Hepatopancreas", "Hp", "#000000",
+                "O",  "Ovotestis",      "O",  "#9b9b9b",
+                "W",  "Whole snail",    "W",  "#683131",
+                "TY", "Water tray",     "Ty", "#22dadf",
+                "TK", "Water tank",     "Tk", "#00a9ff"
+                ), ncol = 4, byrow = TRUE)
 
 org.tp <- org.data[ grep("TY|TK", org.data[,1], invert = TRUE), ]
 
