@@ -1,8 +1,8 @@
 # Title: microbiome_diversity_function.R
-# Version: 1.2
+# Version: 1.3
 # Author: Frédéric CHEVALIER <fcheval@txbiomed.org>
 # Created in: 2020-03-25
-# Modified in: 2024-04-26
+# Modified in: 2025-01-02
 
 
 
@@ -198,7 +198,7 @@ shift_legend <- function(p, position = "center") {
 #---------------------#
 
 ## source: https://github.com/b0rxa/scmamp/blob/d74d0c085f82ed4bfef45ed537f773b20d9eaf85/R/plotting.R
-plotPvalues <- function(pvalue.matrix, alg.order=NULL, show.pvalue=TRUE, font.size=NULL, border.col="white", pval.col="white", scientific = TRUE) {
+plotPvalues <- function(pvalue.matrix, alg.order = NULL, show.pvalue = TRUE, font.size = NULL, border.col = "white", pval.col = "white", digits = 2, scientific = TRUE) {
 
     # Dependencies
     if (!requireNamespace("ggplot2", quietly=TRUE)) {
@@ -225,9 +225,9 @@ plotPvalues <- function(pvalue.matrix, alg.order=NULL, show.pvalue=TRUE, font.si
         if (is.null(font.size)) font.size <- GeomLabel$default_aes$size / .pt
         p.value.f <- df$p.value
         if (scientific) {
-            p.value.f[ ! is.na(p.value.f) ] <- format(p.value.f[ ! is.na(p.value.f) ], digits=2, scientific = TRUE, na.encode = FALSE)
+            p.value.f[ ! is.na(p.value.f) ] <- format(p.value.f[ ! is.na(p.value.f) ], digits = digits, scientific = TRUE, na.encode = FALSE)
         } else {
-            p.value.f <- round(p.value.f, 2)
+            p.value.f <- round(p.value.f, digits)
         }
         gplot <- gplot + ggplot2::geom_text(ggplot2::aes(label = p.value.f),
                                         size=font.size, col=pval.col)
