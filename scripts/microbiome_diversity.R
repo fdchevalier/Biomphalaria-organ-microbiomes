@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
 # Title: microbiome_diversity.R
-# Version: 2.0
+# Version: 2.1
 # Author: Frédéric CHEVALIER <fcheval@txbiomed.org>
 # Created in: 2020-03-25
-# Modified in: 2024-06-09
+# Modified in: 2025-01-02
 
 
 
@@ -127,14 +127,11 @@ taxa <- read_qza(taxa.f)$data
 cln.nm <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 taxa   <- separate(taxa, 2, cln.nm, sep = ";")
 
-## Cleaning names
-taxa[, (1:length(cln.nm))+1] <- apply(taxa[,(1:length(cln.nm))+1], 2, function(x) gsub(".*__","", x))
-
-## Polishing data
+# Polishing data
 rownames(taxa) <- taxa[,1]
 taxa <- taxa[,-c(1,ncol(taxa))]
 
-## Assign "Unassigned" to all level of unassigned ASV
+# Assign "Unassigned" to all level of unassigned ASV
 taxa[ taxa[,1] == "Unassigned", ] <- "Unassigned"
 
 ## Convert table
@@ -178,6 +175,7 @@ write.table(rownames(tax_table(mybiom))[(my.mt | my.cp | my.euk)], "../data/cont
 mybiom <- subset_taxa(mybiom, ! (my.mt | my.cp | my.euk))
 
 ## Final numbers
+cat("Initial number of ASVs:", nrow(asv.tb), "\n\n")
 cat("\nNumber of ASVs removed:",
     "\n\t- mitochondria and chloroplasts:", sum(my.mt | my.cp), "/", signif(sum(my.mt | my.cp) / nb.asv * 100, 2), "% of the total ASVs",
     "\n\t- eukaryotes:", sum(my.euk), "/", signif(sum(my.euk) / nb.unass * 100, 2), "% of the unassigned ASVs", "/", signif(sum(my.euk) / nb.asv * 100, 2), "% of the total ASVs",
@@ -198,7 +196,7 @@ cat("\nNumber of ASVs per snail species:\n")
 for (i in pop.data[, 1]) {
     cat("\t- ", i, ": ", length(otu_nb_sp[[i]][[1]]), " (", length(otu_nb_sp[[i]][[2]]), " unassigned)\n", sep = "")
 }
-cat("\t- Common ASVs: ", intersect(otu_nb_sp[[1]][[1]], otu_nb_sp[[2]][[1]]) %>% length(), " (",  intersect(otu_nb_sp[[1]][[2]], otu_nb_sp[[2]][[2]]) %>% length(), ")\n", sep = "")
+cat("\t- Common ASVs: ", intersect(otu_nb_sp[[1]][[1]], otu_nb_sp[[2]][[1]]) %>% length(), " (",  intersect(otu_nb_sp[[1]][[2]], otu_nb_sp[[2]][[2]]) %>% length(), " unassigned)\n", sep = "")
 
 
 #--------------------#
@@ -220,9 +218,9 @@ invisible(dev.off())
 ggsave(paste0(graph.d, "Supp. Fig. 1 - rarefaction.pdf"), p, height = 7, width = 7, useDingbats = FALSE)
 
 
-#-----------#
-# Diversity #
-#-----------#
+#-----------------#
+# Alpha-diversity #
+#-----------------#
 
 cli_h2("Alpha-diversity")
 
@@ -272,8 +270,13 @@ for (i in indices) {
     myanova <- anova(mylm)
     mycoef <- mylm %>% summary() %>% coef()
 
-    # Output results
+    # Output ANOVA results
     append  <- ifelse(match(i, indices) == 1, FALSE, TRUE)
+    outfile <- paste0(result.d, "a-div_anova_results.txt")
+    write(i, outfile, append = append)
+    write.table(myanova, outfile, append = TRUE, sep = "\t")
+
+    # Output LMER results
     outfile <- paste0(result.d, "a-div_lmer_results.txt")
     write(i, outfile, append = append)
     write.table(mycoef, outfile, append = TRUE, sep = "\t")
@@ -296,8 +299,13 @@ for (p in pop.data[,1]) {
             myanova <- anova(mylm)
             mycoef <- mylm %>% summary() %>% coef()
 
-            # Output results
+            # Output ANOVA results
             append <- ifelse(match(i, indices) == 1 & match(j, myconds) == 1, FALSE, TRUE)
+            outfile <- paste0(result.d, "a-div_cond_anova_results.txt")
+            write(paste(i, j), outfile, append = append)
+            write.table(myanova, outfile, append = TRUE, sep = "\t")
+
+            # Output LMER results
             outfile <- paste0(result.d, "a-div_cond_lmer_results.txt")
             write(paste(i, j), outfile, append = append)
             write.table(mycoef, outfile, append = TRUE, sep = "\t")
@@ -374,12 +382,12 @@ for (i in 1:nrow(myidx)) {
 pdf(NULL)
 p <- ggarrange(plotlist = p.ls, labels = LETTERS[1:length(p.ls)], ncol = length(p.ls), nrow = 1, common.legend = TRUE, legend = "bottom", align = "hv")
 invisible(dev.off())
-ggsave(paste0(graph.d, "Supp. Fig. 2 - alpha-div_p-val_v3.pdf"), p, width = 10 * length(p.ls), height = 10, useDingbats = FALSE)
+ggsave(paste0(graph.d, "Supp. Fig. 2 - alpha-div_p-val.pdf"), p, width = 10 * length(p.ls), height = 10, useDingbats = FALSE)
 
 
-#------#
-# PCoA #
-#------#
+#----------------#
+# Beta-diversity #
+#----------------#
 
 cli_h2("Beta-diversity")
 
@@ -453,7 +461,7 @@ for (r in 1:length(pop.ordr)) {
         # adonis(mydist.tmp ~ Collection.date + Type, data = mypop.tmp[,c("Type", "Snail.ID", "Collection.time", "Collection.date")], permutations = 1000)
 
         # Dispersion stat
-        mybiom.r.stat.b[[r]][[myls.idx]] <- betadisper(mydist.tmp, get_variable(mybiom.r)[, mycln], type = "centroid")
+        mybiom.r.stat.b[[r]][[myls.idx]] <- betadisper(mydist.tmp, get_variable(mybiom.r)[, mycln], type = "median", bias.adjust = TRUE)
         mybiom.r.stat.T[[r]][[myls.idx]] <- TukeyHSD(mybiom.r.stat.b[[r]][[myls.idx]])
 
         # P-values matrix
@@ -495,46 +503,62 @@ for (r in 1:length(pop.ordr)) {
 myax <- list(c(1,2), c(1,3), c(3,2))
 
 # List to save plots
+p.ls   <- vector("list", length(pop.ordr))
 p.ls.r <- vector("list", length(pop.ordr))
+l      <- 0
 
 for (r in 1:length(pop.ordr)) {
 
     mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[r])
     mybiom.r   <- rarefy_even_depth(mybiom.tmp, rngseed = myseed, verbose = FALSE)
 
-    p.ls.r[[r]] <- vector("list", length(mydist) * length(myax))
+    p.ls[[r]] <- vector("list", length(mydist))
 
     k <- 0
     for (i in 1:length(mydist)) {
         for (j in 1:length(myax)) {
             mytitle <- ""
-            if (j == 1) { mytitle <- tools::toTitleCase(mydist[i]) }
+            if (j == 1) {
+                l %<>% + 1
+                mytitle <- paste0(LETTERS[l], ". ", pop.ordr[[r]], " - ", tools::toTitleCase(mydist[i]))
+            }
 
-            k <- k + 1
-            p.ls.r[[r]][[k]] <- plot_ordination(mybiom.r, mybiom.r.pcoa[[r]][[i]], color = "Type", axes=myax[[j]]) +
+            p.ls.r[[j]] <- plot_ordination(mybiom.r, mybiom.r.pcoa[[r]][[i]], color = "Code", axes=myax[[j]]) +
+                                    scale_color_manual(values = org.data[,4], labels = org.data[,2]) +
                                     stat_ellipse(type = "norm") +
                                     ggtitle(mytitle) +
                                     theme(axis.text = element_text(size = rel(0.45)), axis.title = element_text(size = rel(0.6)), legend.position="none")
         }
+
+    lgd.com <- FALSE
+    lgd.pos <- NULL
+    if (r == length(pop.ordr) & i == length(mydist)) {
+        lgd.com <- TRUE
+        lgd.pos <- "bottom"
+    }
+
+    pdf(NULL)
+    p.ls[[r]][[i]] <- ggarrange(plotlist = p.ls.r, ncol = length(myax), nrow = 1, hjust = 0, common.legend = lgd.com, legend = lgd.pos)
+    invisible(dev.off())
+
     }
 }
 
+# Flatten lists for plotting
+p.ls %<>% purrr::flatten()
 
-myletters <- lapply(1:length(mydist), function(x) c(LETTERS[x], rep("",length(myax)-1))) %>% unlist()
-
-mylg <- length(p.ls.r[[1]])
 pdf(NULL)
-p <- ggarrange(plotlist = p.ls.r[[1]], nrow = length(p.ls.r[[1]])/3, ncol = 3, common.legend = TRUE, legend = "bottom", labels = myletters)
+p <- ggarrange(plotlist = p.ls, ncol = 1, nrow = length(p.ls), heights = c(1, 1, 1, 1.15))
 invisible(dev.off())
 
-pdf(paste0(graph.d, "b-div.pdf"), width = 3.5 * 3, height = 3.5 * length(p.ls.r[[1]]) / 3)
-print(p)
-invisible(dev.off())
-
+ggsave(paste0(graph.d, "Supp. Fig. 3 - b-div_PCoA.pdf"), p, width = 3.5 * 3, height = 3.5 * length(p.ls), useDingbats = FALSE)
 
 # List to save plots
 p.ls <- vector("list", length(pop.ordr))
-k    <- 0
+l    <- 0
+
+# Breaks
+mybreaks <- mybiom.r.stat.m %>% purrr::flatten() %>% sapply(., min, na.rm = TRUE) %>% min() %>% { seq(log10(.), log10(0.05), length.out=4) } %>% { c(10^(.), 1) }
 
 for (r in 1:length(pop.ordr)) {
 
@@ -545,17 +569,22 @@ for (r in 1:length(pop.ordr)) {
     p.ls[[r]] <- vector("list", length(mydist))
 
     for (i in 1:length(mydist)) {
-        k %<>% +1
-        mytitle <- paste0(LETTERS[k], ". ", pop.ordr[[r]], " - ", tools::toTitleCase(mydist[i]))
+        l %<>% +1
+        mytitle <- paste0(LETTERS[l], ". ", pop.ordr[[r]], " - ", tools::toTitleCase(mydist[i]))
 
         # Plot tree
         myhc_tmp <- myhc[[r]][[i]]
         myordr <- c(grep("Tank|Tray", labels(myhc_tmp), value = TRUE), grep("Tank|Tray", labels(myhc_tmp), invert = TRUE, value = TRUE))
-        myhc_tmp <- as.dendrogram(myhc_tmp) %>% dendextend::rotate(., myordr) %>% set("labels_cex", 0.75) %>% set("labels", paste(" ", labels(.))) %>% set("branches_lwd", 0.5)
+        myhc_tmp <- as.dendrogram(myhc_tmp) %>% dendextend::rotate(., myordr) %>% set("labels_cex", 0.75) %>% set("branches_lwd", 0.5)
 
         if (! grepl("Tank|Tray", labels(myhc_tmp))[1]) {
-            myordr <- c(grep("Whole snail|Hemolymph", labels(myhc_tmp), invert = TRUE, value = TRUE), grep("Whole|Hemolymph", labels(myhc_tmp), value = TRUE))
-            myhc_tmp <- myhc_tmp %>% dendextend::rotate(., myordr)
+            mygrp <- partition_leaves(myhc_tmp)
+            mygrp_wt    <- sapply(mygrp, function(x) grepl("Tank|Tray", x) %>% any())
+            mygrp_lg    <- lapply(mygrp, length)
+            mygrp_lg_wt <- (mygrp_lg[mygrp_wt] %>% unlist() %>% order(., decreasing = TRUE))[2]
+            mygrp5      <- mygrp[mygrp_wt][mygrp_lg_wt] %>% unlist() %>% paste0(., collapse = "|")
+            myordr      <- c(grep(mygrp5, labels(myhc_tmp), value = TRUE), grep(mygrp5, labels(myhc_tmp), value = TRUE, invert = TRUE))
+            myhc_tmp    <- myhc_tmp %>% dendextend::rotate(., myordr)
         }
 
         # # Reroot tray with environment if needed
@@ -567,7 +596,7 @@ for (r in 1:length(pop.ordr)) {
         # }
 
         # Update labels
-        labels(myhc_tmp) %<>% sapply(., function(x) paste0(x, " (", org.data[grep(trimws(x), org.data[,2], ignore.case = TRUE), 3], ")"))
+        labels(myhc_tmp) %<>% sapply(., function(x) paste0(" ", x, " (", org.data[grep(trimws(x), org.data[,2], ignore.case = TRUE), 3], ")"))
 
 
         # mylim <- range(pretty(c(0, attributes(myhc_tmp)$height)))
@@ -576,11 +605,11 @@ for (r in 1:length(pop.ordr)) {
                     theme(axis.line = element_blank(), axis.ticks = element_blank(), axis.text.x = element_text(), plot.margin = unit(c(1.2, 5.5, 1, 1), "lines"))
 
         mymat    <- mybiom.r.stat.m[[r]][[i]]
-        mybreaks <- c(10^(seq(log10(min(mymat, na.rm=T)), log10(0.05), length.out=4)), 1)
+        # mybreaks <- c(10^(seq(log10(min(mymat, na.rm=T)), log10(0.05), length.out=4)), 1)
 
-        p.ls.t <- plotPvalues(mymat, border.col = "black", pval.col = "black", font.size = 2) +
+        p.ls.t <- plotPvalues(mymat, border.col = "black", pval.col = "black", font.size = 2, scientific = FALSE, digits = 5) +
                     xlab(expression(paste(beta,"-dispersion test"))) + ylab("Permanova test") +
-                    scale_fill_gradient2(low = "red", mid = "yellow", high = "white", limits = c(NA, 0.05), guide = "colorbar", na.value = "transparent", trans = "log10", breaks = mybreaks, label = format(mybreaks, digit = 2, scientific = TRUE)) +
+                    scale_fill_gradient2(low = "red", mid = "yellow", high = "white", limits = c(min(mybreaks), 0.05), guide = "colorbar", na.value = "transparent", trans = "log10", breaks = mybreaks, label = format(mybreaks, digit = 2, scientific = TRUE)) +
                     guides(fill = guide_colourbar(barwidth = 9, title.vjust = 0.75)) +
                     theme(axis.line = element_blank(), axis.ticks = element_blank(), legend.position = "none", plot.margin = margin(20, 1, 5.5, 5.5))
 
@@ -591,7 +620,9 @@ for (r in 1:length(pop.ordr)) {
             lgd.pos <- "bottom"
         }
 
+        pdf(NULL)
         p.ls[[r]][[i]] <- ggarrange(p.ls.d, p.ls.t, labels = mytitle, ncol = 2, hjust = 0, common.legend = lgd.com, legend = lgd.pos)
+        invisible(dev.off())
 
     }
 }
@@ -616,14 +647,18 @@ cli_h2("Taxonomic diversity")
 p.ls   <- vector("list", length(pop.ordr))
 pop.wd <- vector("list", length(pop.ordr))
 
+#~~~~~~~~#
+# Phylum #
+#~~~~~~~~#
+
 # Color
 mylevel <- "Phylum"
-
-p.ls   <- vector("list", length(pop.ordr))
 set.seed(myseed)
 mybiom.P <- mytax_glom(mybiom, mylevel) %>% core(., detection=0, prevalence=0)
-myclr.P <- tax_table(mybiom.P) %>% nrow() %>% distinctColorPalette(., seed=myseed - 164)
+myclr.P <- tax_table(mybiom.P) %>% nrow() %>% distinctColorPalette(., seed=myseed - 70)
 names(myclr.P) <- tax_table(mybiom.P)[, mylevel] %>% sort()
+
+p.ls   <- vector("list", length(pop.ordr))
 
 for (r in 1:length(pop.ordr)) {
 
@@ -652,7 +687,7 @@ for (r in 1:length(pop.ordr)) {
     mybiom.P.p <- transform(mybiom.P.p, transform="compositional")
 
     # Vector color
-    myclr <- myclr.P[ tax_table(mybiom.P)[,2] ]
+    myclr <- myclr.P[ tax_table(mybiom.P.p)[,mylevel] ]
 
     # List to store graphs
     p <- vector("list", 2)
@@ -667,7 +702,7 @@ for (r in 1:length(pop.ordr)) {
     # Barplot at sample level
     mybiom.P.m <- psmelt(mybiom.P.s)
     mybiom.P.m <- mybiom.P.m[ order(mybiom.P.m$Abundance, decreasing=TRUE), ]
-    p[[2]] <- ggplot(mybiom.P.m, aes(x = Sample, y = Abundance, fill = Phylum)) +
+    p[[2]] <- ggplot(mybiom.P.m, aes(x = Sample, y = Abundance, fill = !! ensym(mylevel))) +
                   geom_bar(stat = "identity") +
                   scale_fill_manual(values = myclr) +
                   scale_x_discrete(limits=mylabels) +
@@ -686,13 +721,12 @@ invisible(dev.off())
 
 ggsave(paste0(graph.d, "taxo-div.pdf"), p, width = 15, height = 9 * length(p.ls), useDingbats = FALSE)
 
-
 # Per Organ
 for (r in 1:length(pop.ordr)) {
     mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[[r]])
 
     # Remove non present taxa
-    mybiom.P <- mytax_glom(mybiom.tmp, "Phylum")
+    mybiom.P <- mytax_glom(mybiom.tmp, mylevel)
     mybiom.P <- core(mybiom.P, detection=1, prevalence=0)
 
     # Organ biome
@@ -701,20 +735,16 @@ for (r in 1:length(pop.ordr)) {
     # Transform data to compositional
     mybiom.P.p <- transform(mybiom.P.p, transform="compositional")
 
-    # Vector color
-    myclr <- myclr.P[ tax_table(mybiom.P.p)[,2] ]
-
     # List to store graphs
     p <- vector("list", 3)
 
     # Barplot at population level
     mybiom.P.m <- psmelt(mybiom.P.p)
-    mybiom.P.m <- mybiom.P.m[ order(mybiom.P.m$Abundance, decreasing=TRUE), ]
 
     # Vector color
-    myclr <- myclr.P[ tax_table(mybiom.P)[,2] ]
+    myclr <- myclr.P[ tax_table(mybiom.P.p)[,mylevel] ]
 
-    p.ls[[r]] <- ggplot(mybiom.P.m, aes(x = Code, y = Abundance, fill = Phylum,)) +   # Use of quasiquotation !!r otherwise lastest slot of the list taken for plotting
+    p.ls[[r]] <- ggplot(mybiom.P.m, aes(x = Code, y = Abundance, fill = !! ensym(mylevel))) +   # Use of quasiquotation !!r otherwise lastest slot of the list taken for plotting
                     geom_bar(stat = "identity", color = "black", size = 0.05) +
                     scale_fill_manual(values = myclr) +
                     ## Update legend look (because of the bar borders)
@@ -728,8 +758,59 @@ pdf(NULL)
 p <- ggarrange(plotlist = p.ls, labels = LETTERS[1:length(p.ls)], ncol = 1, common.legend = TRUE, legend = "bottom", align = "v")
 invisible(dev.off())
 
-ggsave(paste0(graph.d, "Fig. 4 - Organ taxo-div ", i, ".pdf"), p, width = 8, height = 7, useDingbats = FALSE)
+ggsave(paste0(graph.d, "Fig. 4 - Organ taxo-div.pdf"), p, width = 9, height = 7, useDingbats = FALSE)
 
+#~~~~~~~#
+# Class #
+#~~~~~~~#
+
+# Color Phylum
+mylevel <- "Class"
+set.seed(myseed)
+mybiom.C <- mytax_glom(mybiom, mylevel) %>% core(., detection=0, prevalence=0)
+myclr.C  <- tax_table(mybiom.C) %>% nrow() %>% distinctColorPalette(., seed=myseed - 70)
+names(myclr.C) <- tax_table(mybiom.C)[, mylevel] %>% sort()
+
+p.ls   <- vector("list", length(pop.ordr))
+
+# Per Organ
+for (r in 1:length(pop.ordr)) {
+    mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[[r]])
+
+    # Remove non present taxa
+    mybiom.C <- mytax_glom(mybiom.tmp, mylevel)
+    mybiom.C <- core(mybiom.C, detection=1, prevalence=0)
+
+    # Organ biome
+    mybiom.C.p <- mysample_glom(mybiom.C, "Type")
+
+    # Transform data to compositional
+    mybiom.C.p <- transform(mybiom.C.p, transform="compositional")
+
+    # List to store graphs
+    p <- vector("list", 3)
+
+    # Barplot at population level
+    mybiom.C.m <- psmelt(mybiom.C.p)
+
+    # Vector color
+    myclr <- myclr.C[ tax_table(mybiom.C.p)[,mylevel] ]
+
+    p.ls[[r]] <- ggplot(mybiom.C.m, aes(x = Code, y = Abundance, fill = !! ensym(mylevel))) +   # Use of quasiquotation !!r otherwise lastest slot of the list taken for plotting
+                    geom_bar(stat = "identity", color = "black", size = 0.05) +
+                    scale_fill_manual(values = myclr) +
+                    ## Update legend look (because of the bar borders)
+                    guides(fill = guide_legend(override.aes = list(colour = NA, size = 0.5))) +
+                    # Remove x axis title and legend
+                    labs(title = pop.ordr[[r]], y = "Relative Abundance", x = "") +
+                    theme(legend.position = "none")
+}
+
+pdf(NULL)
+p <- ggarrange(plotlist = p.ls, labels = LETTERS[1:length(p.ls)], ncol = 1, common.legend = TRUE, legend = "bottom", align = "v")
+invisible(dev.off())
+
+ggsave(paste0(graph.d, "Supp. Fig. 4 - Organ taxo-div_class.pdf"), p, width = 9, height = 8, useDingbats = FALSE)
 
 #-----------------------------#
 # Shared taxa between samples #
@@ -798,13 +879,13 @@ ubq_asv <- lapply(ct.ls[[1]], function(x) which((x %>% rowSums(.)) == 8) %>% nam
 com_asv <- ubq_asv[[1]] %in% ubq_asv[[2]]
 
 cat("\nNumber of ubiquitous ASVs:",
-    "\n\t-", names(ubq_asv)[[1]], ": ", length(ubq_asv[[1]]), "ASVs",
-    "\n\t-", names(ubq_asv)[[2]], ": ", length(ubq_asv[[2]]), "ASVs",
-    "\n\t- common:", sum(com_asv), "ASVs.\n\n", sep = "")
+    "\n\t- ", names(ubq_asv)[[1]], ": ", length(ubq_asv[[1]]), " ASVs",
+    "\n\t- ", names(ubq_asv)[[2]], ": ", length(ubq_asv[[2]]), " ASVs",
+    "\n\t- Common:", sum(com_asv), " ASVs.\n\n", sep = "")
 
 # Poportion of ASV shared per species
 res <- sapply(ct.ls[[1]], function(x) nrow(x[rowSums(x) > 1, ]) / nrow(x))
-cat("\nProportion of shared ASVs per species:\n")
+cat("\nProportion of shared ASVs within each species:\n")
 print(res)
 
 # Poportion of ASV shared per sample type
@@ -945,16 +1026,16 @@ for (i in 1:length(tsh.ls)) {
     mytsh <- 0
     mypv  <- 0
 
-    fig_pfx <- "Supp. Fig. 3"
+    fig_pfx <- "Fig. 5"
     myh <- 5
     myw <- 10
     if (i == 1) {
-        fig_pfx <- "Fig. 5"
+        fig_pfx <- "Supp. Fig. 5"
         myw <- 20
     }
 
     for (s in pop.ordr) {
-        pdf(paste0(graph.d, fig_pfx, " - ", s," ASV upset - tsh ", mytsh, " pv ", mypv, ".pdf"), height = myh, width = myw, useDingbats = FALSE)
+        pdf(paste0(graph.d, fig_pfx, " - ", s," ASV upset - tsh ", mytsh, " pv ", mypv, ".pdf"), height = myh, width = myw, useDingbats = FALSE, onefile = FALSE)
         otu_type_fn <- ct.ls[[i]][[s]]
         clr <- pop.data[ pop.data[, 1] == s, 2]
         ups <- upset(otu_type_fn, sets = colnames(otu_type_fn), nintersects = NA, main.bar.color = clr, mainbar.y.label = "ASVs per intersection", sets.x.label = "ASVs per sample type", keep.order = TRUE)
@@ -987,21 +1068,24 @@ for (s in org.ordr) {
                     theme(plot.title = element_text(hjust = 0.5))
 }
 
+
 # Panel with replicate
 pdf(paste0(graph.d, "Fig. 6 - ASV upset by spl type.pdf"), width = myw, height = myh)
 p <- ggarrange(plotlist = p.ls, nrow = length(p.ls) / 4, ncol = length(p.ls) / 2)
 print(p)
 invisible(dev.off())
 
+
 # Pairwise ASV sharing
 pdf(NULL)
-x_clr <- pop.data[names(pw.ls)[1] == pop.data[,1], 2]
-y_clr <- pop.data[names(pw.ls)[2] == pop.data[,1], 2]
+myclr <- pw.shr
+myclr[lower.tri(myclr)] <- pop.data[names(pw.ls)[1] == pop.data[,1], 2]
+myclr[upper.tri(myclr)] <- pop.data[names(pw.ls)[2] == pop.data[,1], 2]
 
-p <- plotPvalues(pw.shr, border.col = "black", pval.col = "black", font.size = 3, scientific = FALSE) +
+p <- plotPvalues(pw.shr, border.col = "black", pval.col = as.vector(myclr), font.size = 3, scientific = FALSE) +
         xlab("") + ylab("") +
-        scale_fill_gradient2(low = "white", mid = "yellow", high = "red", limits = c(0.2, 0.6), guide = "colorbar", na.value = "transparent") +
+        scale_fill_gradient2(low = "white", mid = "skyblue", high = "steelblue4", limits = c(0.2, 0.6), guide = "colorbar", na.value = "transparent") +
         guides(fill = guide_colourbar(barwidth = 9, title.vjust = 0.75)) +
-        theme(axis.line = element_blank(), axis.ticks = element_blank(), legend.position = "none", axis.text.x = element_text(color = x_clr, vjust = 0.5, hjust = 1), axis.text.y = element_text(color = y_clr), plot.margin = margin(2, 2, 2, 2))
+        theme(axis.line = element_blank(), axis.ticks = element_blank(), legend.position = "none", axis.text.x = element_text(vjust = 0.5, hjust = 1), plot.margin = margin(2, 2, 2, 2))
 invisible(dev.off())
-ggsave(paste0(graph.d, "Supp. Fig. 4 - pairwise shared ASV.pdf"), p, width = 5, height = 5, useDingbats = FALSE)
+ggsave(paste0(graph.d, "Supp. Fig. 6 - pairwise shared ASV.pdf"), p, width = 5, height = 5, useDingbats = FALSE)
