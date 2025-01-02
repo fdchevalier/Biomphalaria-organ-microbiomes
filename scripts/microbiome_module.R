@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
 # Title: microbiome_module.R
-# Version: 0.1
+# Version: 0.2
 # Author: Frédéric CHEVALIER <fcheval@txbiomed.org>
 # Created in: 2024-05-23
-# Modified in: 2024-12-22
+# Modified in: 2025-01-02
 
 
 
@@ -22,7 +22,7 @@ org.data <- matrix(c(
                 "G",  "Gut",            "G",  "#00be67",
                 "L",  "Hepatopancreas", "Hp", "#000000",
                 "O",  "Ovotestis",      "O",  "#9b9b9b",
-                "W",  "Whole snail",    "W",  "#683131",
+                "W",  "Whole snail",    "W",  "#a05a2c",
                 "TY", "Water tray",     "Ty", "#22dadf",
                 "TK", "Water tank",     "Tk", "#00a9ff"
                 ), ncol = 4, byrow = TRUE)
