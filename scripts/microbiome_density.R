@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
 # Title: microbiome_density.R
-# Version: 1.1
+# Version: 1.2
 # Author: Frédéric CHEVALIER <fcheval@txbiomed.org>, Lauren Carruthers <Lauren.Carruthers@glasgow.ac.uk>
 # Created in: 2024-03-15
-# Modified in: 2024-06-09
+# Modified in: 2024-01-02
 
 
 
@@ -102,7 +102,13 @@ for (i in my16S[! spl_lqd, "Sample_ID"]) {
     my16S[ my16S[, "Sample_ID"] == i, "Quantity_mean" ] <- my16S[ my16S[, "Sample_ID"] == i, "Quantity_mean" ] / (mypiwi[ mypiwi[, "Sample_ID"] == i, "Quantity_mean" ] / 2)
 }
 
+# List of hemolymph samples with high normalized quantities
+cat("List of hemolymph samples with high normalized quantities (>1e4):\n")
+hml_high <- my16S[ my16S[, "Quantity_mean"] > 1e4 & my16S[, "Type.code"] == "H", ]
+print(hml_high)
+
 # Remove outlier in hemolymph
+cat("Removing outliers among hemolymph samples (>1e5 normalized 16S copies):\n")
 outlier <- my16S[, "Quantity_mean"] > 1e5 & my16S[, "Type.code"] == "H"
 my16S   <- my16S[ ! outlier,]
 spl_lqd <- spl_lqd[ ! outlier]
@@ -211,16 +217,18 @@ p.ls <- vector("list", 2)
 my16S_org <- my16S[! spl_lqd, ]
 my16S_lqd <- my16S[  spl_lqd, ]
 
+y_lab <- "16S rRNA gene copy number"
+
 p.ls[[1]] <- ggplot(my16S_org, aes(x = Code, y = Quantity_mean, fill = Population)) +
         geom_boxplot(outlier.shape = NA) +
-        labs(x = "", y = "16S copy number per host cell") +
+        labs(x = "", y = paste(y_lab, "\nper host cell")) +
         scale_y_continuous(trans = "log2") +
         scale_fill_manual(values = pop.data[,2]) +
         theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
 
 p.ls[[2]] <- ggplot(my16S_lqd, aes(x = Code, y = Quantity_mean, fill = Population)) +
         geom_boxplot(outlier.shape = NA) +
-        labs(x = "", y = "16S copy number per µL") +
+        labs(x = "", y = paste(y_lab, "\nper µL")) +
         scale_y_continuous(trans = "log2") +
         scale_fill_manual(values = pop.data[,2]) +
         theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
@@ -240,7 +248,7 @@ for (i in 1:length(mytests)) {
     y_clr <- rev(x_clr)
     p.ls[[i]] <- plotPvalues(mytests[[i]]$p.value, border.col = "black", pval.col = "black", font.size = 3) +
                     xlab("") + ylab("") +
-                    scale_fill_gradient2(low = "red", mid = "yellow", high = "white", limits = c(NA, 0.05), guide = "colorbar", na.value = "transparent", trans = "log10", breaks = mybreaks, label = format(mybreaks, digit = 2, scientific = TRUE)) +
+                    scale_fill_gradient2(low = "red", mid = "yellow", high = "white", limits = c(min(mybreaks), 0.05), guide = "colorbar", na.value = "transparent", trans = "log10", breaks = mybreaks, label = format(mybreaks, digit = 2, scientific = TRUE)) +
                     guides(fill = guide_colourbar(barwidth = 9, title.vjust = 0.75)) +
                     theme(axis.line = element_blank(), axis.ticks = element_blank(), legend.position = "none", axis.text.x = element_text(color = x_clr, angle = 90, vjust = 0.5, hjust=1), axis.text.y = element_text(color = y_clr))
 }
@@ -248,7 +256,7 @@ for (i in 1:length(mytests)) {
 pdf(NULL)
 p <- ggarrange(plotlist = p.ls, labels = LETTERS[1:length(p.ls)], ncol = length(p.ls), nrow = 1, common.legend = TRUE, legend = "bottom", align = "hv")
 invisible(dev.off())
-ggsave(paste0(graph.d, "Supp. Fig. 5 - density_p-val.pdf"), p, width = 5 * length(p.ls), height = 5, useDingbats = FALSE)
+ggsave(paste0(graph.d, "Supp. Fig. 7 - density_p-val.pdf"), p, width = 7 * length(p.ls), height = 7, useDingbats = FALSE)
 
 # Clean tmp file
 if (file.exists("Rplots.pdf")) { unlink("Rplots.pdf") }
