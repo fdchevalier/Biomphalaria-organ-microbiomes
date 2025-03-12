@@ -392,7 +392,7 @@ ggsave(paste0(graph.d, "Supp. Fig. 2 - alpha-div_p-val.pdf"), p, width = 10 * le
 cli_h2("Beta-diversity")
 
 # mydist <- c("jaccard", "Unweighted UniFrac", "Weighted UniFrac", "bray")
-mydist <- c("Unweighted UniFrac", "Weighted UniFrac")
+mydist <- c("Unweighted UniFrac", "Weighted UniFrac", "bray")
 
 # This links could be use for non-parametric test instead of PERMANOVA but does not work properly.
 # source("https://raw.githubusercontent.com/alekseyenko/Tw2/27520182e704ec28324e74ddeab0fb584c7bbf10/code/Tw2.R")
@@ -566,11 +566,15 @@ for (r in 1:length(pop.ordr)) {
     mybiom.tmp <- subset_samples(mybiom, Population == pop.ordr[[r]])
     mybiom.r   <- rarefy_even_depth(mybiom.tmp, rngseed=myseed, verbose=FALSE)
 
-    p.ls[[r]] <- vector("list", length(mydist))
+    p.ls[[r]] <- vector("list", length(mydist)) %>% setNames(., mydist)
 
     for (i in 1:length(mydist)) {
-        l %<>% +1
-        mytitle <- paste0(LETTERS[l], ". ", pop.ordr[[r]], " - ", tools::toTitleCase(mydist[i]))
+        myletter <- ""
+        if (grepl("UniFrac", mydist[i])) {
+            l %<>% +1
+            myletter <- paste0(LETTERS[l], ". ")
+        }
+        mytitle <- paste0(myletter, pop.ordr[[r]], " - ", tools::toTitleCase(mydist[i]))
 
         # Plot tree
         myhc_tmp <- myhc[[r]][[i]]
@@ -628,13 +632,24 @@ for (r in 1:length(pop.ordr)) {
 }
 
 # Flatten lists for plotting
-p.ls %<>% purrr::flatten()
+p.ls.1 <- lapply(p.ls, function(x) x[mydist[1:2]])
+p.ls.1 %<>% purrr::flatten()
 
 pdf(NULL)
-p <- ggarrange(plotlist = p.ls, ncol = 1, nrow = length(p.ls), heights = c(1, 1, 1, 1.15))
+p <- ggarrange(plotlist = p.ls.1, ncol = 1, nrow = length(p.ls.1), heights = c(1, 1, 1, 1.15))
 invisible(dev.off())
 
-ggsave(paste0(graph.d, "Fig. 3 - b-div_FDR.pdf"), p, width = 5 * 2, height = 3.5 * length(p.ls), useDingbats = FALSE)
+ggsave(paste0(graph.d, "Fig. 3 - b-div_FDR.pdf"), p, width = 5 * 2, height = 3.5 * length(p.ls.1), useDingbats = FALSE)
+
+# Flatten lists for plotting
+p.ls.2 <- lapply(p.ls, function(x) x[mydist[3]])
+p.ls.2 %<>% purrr::flatten()
+
+pdf(NULL)
+p <- ggarrange(plotlist = p.ls.2, ncol = 1, nrow = length(p.ls.2), heights = c(1, 1.15))
+invisible(dev.off())
+
+ggsave(paste0(graph.d, "b-div_bray_FDR.pdf"), p, width = 5 * 2, height = 3.5 * length(p.ls.2), useDingbats = FALSE)
 
 
 #---------------------#
