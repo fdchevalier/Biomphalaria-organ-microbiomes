@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
 # Title: microbiome_diversity.R
-# Version: 2.1
+# Version: 2.2
 # Author: Frédéric CHEVALIER <fcheval@txbiomed.org>
 # Created in: 2020-03-25
-# Modified in: 2025-01-02
+# Modified in: 2025-04-21
 
 
 
@@ -889,6 +889,9 @@ for (i in 1:length(tsh.ls)) {
     }
 }
 
+# Update column names
+ct.ls %<>% lapply(., function(x) lapply(x, function (y) { colnames(y) %<>% match(., org.data[,1]) %>% org.data[., 3] ; return(y) } ))
+
 # Ubiquitous ASVs (snail + water) shared between species
 ubq_asv <- lapply(ct.ls[[1]], function(x) which((x %>% rowSums(.)) == 8) %>% names())
 com_asv <- ubq_asv[[1]] %in% ubq_asv[[2]]
@@ -904,40 +907,40 @@ cat("\nProportion of shared ASVs within each species:\n")
 print(res)
 
 # Poportion of ASV shared per sample type
-res <- sapply(org.data[,1], function(x) lapply(ct.ls[[1]], function(y) { y1 <- y[ y[,x] == 1, ] ; nrow(y1[ rowSums(y1) > 1, ]) / nrow(y1)}))
+res <- sapply(org.data[,3], function(x) lapply(ct.ls[[1]], function(y) { y1 <- y[ y[,x] == 1, ] ; nrow(y1[ rowSums(y1) > 1, ]) / nrow(y1)}))
 cat("\nProportion of shared ASVs per sample type:\n")
 print(res)
 
 # Poportion of ASV per sample type
-res <- sapply(org.data[,1], function(x) lapply(ct.ls[[1]], function(y) { y1 <- y[ y[,x] == 1, ] ; nrow(y1) / nrow(y)}))
+res <- sapply(org.data[,3], function(x) lapply(ct.ls[[1]], function(y) { y1 <- y[ y[,x] == 1, ] ; nrow(y1) / nrow(y)}))
 cat("\nProportion of ASVs per sample type:\n")
 print(res)
 
 # Proportion of shared ASVs between H and another sample type
 # lapply(ct.ls[[1]], function(x) { a <- (x[, "H"]  == 1 & (x[, "W"]  == 1 | x[, "H"]  == 1 & x[, "O"]  == 1)) ; sum(a)/length(a[rowSums(x) > 1]) })
 cat("\nProportion of shared ASVs between hemolymph and another sample types (but not limited to the intersection):\n")
-prop_asv(ct.ls[[1]], org.data[,1], "H") %>% print()
+prop_asv(ct.ls[[1]], org.data[,3], "Hm") %>% print()
 
 # Proportion of shared ASVs between whole snail and another sample type
 cat("\nProportion of private shared ASVs between whole snail and another sample type (but not found outside of the intersections):\n")
-prop_asv(ct.ls[[1]], org.data[,1], "W", private = TRUE) %>% print()
+prop_asv(ct.ls[[1]], org.data[,3], "W", private = TRUE) %>% print()
 
 # Proportion of shared ASVs between TK|TY and another sample type
 # lapply(ct.ls[[1]], function(x) { a <- (x[, "TK"]  == 1 | x[, "TY"]  == 1) & (x[, "H"]  == 1 | x[, "O"]  == 1 | x[, "W"]  == 1) ; sum(a)/length(a[rowSums(x) > 1]) })
-cat("\nProportion of shared ASVs between water (TK|TY) and another sample type (but not limited to the intersection):\n")
-prop_asv(ct.ls[[1]], org.data[,1], c("TK", "TY")) %>% print()
+cat("\nProportion of shared ASVs between water (Tk|Ty) and another sample type (but not limited to the intersection):\n")
+prop_asv(ct.ls[[1]], org.data[,3], c("Tk", "Ty")) %>% print()
 
 # Proportion of shared ASVs between TK|TY and G|S
-cat("\nProportion of shared ASVs between water (TK|TY) and digestive tract (G|S) (but not limited to the intersection):\n")
-sapply(ct.ls[[1]], function(x) { a <- (x[, "TK"]  == 1 | x[, "TY"]  == 1) & (x[, "G"]  == 1 | x[, "S"] == 1) ; sum(a)/length(a[rowSums(x) > 1]) }) %>% print()
+cat("\nProportion of shared ASVs between water (Tk|Ty) and digestive tract (G|S) (but not limited to the intersection):\n")
+sapply(ct.ls[[1]], function(x) { a <- (x[, "Tk"]  == 1 | x[, "Ty"]  == 1) & (x[, "G"]  == 1 | x[, "S"] == 1) ; sum(a)/length(a[rowSums(x) > 1]) }) %>% print()
 
 # Proportion of ASVs not found in water (including fully private ASVs)
-cat("\nProportion of ASVs not found in  water (TK|TY) (including fully private ASVs to sample type):\n")
-sapply(org.data[, 1], function(y) lapply(ct.ls[[1]], function(x) { a <- (x[, "TK"]  == 1 | x[, "TY"]  == 1) ; b <- rowSums(x[! a & x[, y]  == 1,]) >= 1 ; sum(b) / sum(!a) }))
+cat("\nProportion of ASVs not found in  water (Tk|Ty) (including fully private ASVs to sample type):\n")
+sapply(org.data[, 3], function(y) lapply(ct.ls[[1]], function(x) { a <- (x[, "Tk"]  == 1 | x[, "Ty"]  == 1) ; b <- rowSums(x[! a & x[, y]  == 1,]) >= 1 ; sum(b) / sum(!a) }))
 
 # Proportion of shared ASVs not found in water (excluing fully private ASVs)
-cat("\nProportion of shared ASVs not found in  water (TK|TY) (excluding fully private ASVs to sample type):\n")
-sapply(org.data[, 1], function(y) lapply(ct.ls[[1]], function(x) { a <- (x[, "TK"]  == 1 | x[, "TY"]  == 1) ; b <- rowSums(x[! a & x[, y]  == 1,]) > 1 ; sum(b) / sum(!a) }))
+cat("\nProportion of shared ASVs not found in  water (Tk|Ty) (excluding fully private ASVs to sample type):\n")
+sapply(org.data[, 3], function(y) lapply(ct.ls[[1]], function(x) { a <- (x[, "Tk"]  == 1 | x[, "Ty"]  == 1) ; b <- rowSums(x[! a & x[, y]  == 1,]) > 1 ; sum(b) / sum(!a) }))
 
 # Proportion of ASV found only in snails (amoung all ASVs)
 cat("\nProportion of ASVs only found in snails:\n")
@@ -965,7 +968,7 @@ cat("\nProportion of sample types associated with low ASVs intersections:\n")
 sapply(low.ls[[2]], function(x) {names(x)[x] %>% sapply(., strsplit, "") %>% do.call("rbind", .) %>% apply(., 2, as.numeric) %>% colSums() %>% setNames(., org.data[,1])} ) %>% t()
 
 # Pairwise sharing
-org.ordr <- org.data[, 1]
+org.ordr <- org.data[, 3]
 pw.ls <- vector("list", length(pop.ordr)) %>% setNames(., pop.ordr)
 for (s in pop.ordr) {
     x <- ct.ls[[1]][[s]]
@@ -984,9 +987,6 @@ for (s in pop.ordr) {
 
 pw.shr <- pw.ls[[1]]
 pw.shr[lower.tri(pw.shr)] <- (pw.ls[[2]] %>% t())[lower.tri(pw.shr)]
-colnames(pw.shr) %<>% match(., org.data[,1]) %>% org.data[., 3]
-rownames(pw.shr) %<>% match(., org.data[,1]) %>% org.data[., 3]
-
 
 # ASV shared by species for each sample type
 rm.water <- FALSE
